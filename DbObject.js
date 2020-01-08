@@ -43,8 +43,8 @@ module.exports = class DbObject {
   /**
    * Find one entity
    */
-  findOne(values, orderBy, callback) {
-    return this._db.getBy(this.tableName, values, 1, orderBy, callback);
+  findOne(values, callback) {
+    return this._db.getBy(this.tableName, values, 1, null, callback);
   }
 
   /**
