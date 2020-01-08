@@ -1,0 +1,14 @@
+{
+  "name": "alanzhao-mysql-orm",
+  "version": "1.0.0",
+  "description": "",
+  "main": "Database.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Alan Zhao",
+  "license": "ISC",
+  "dependencies": {
+    "mysql": "^2.17.1"
+  }
+}
