@@ -191,7 +191,9 @@ module.exports = class Database {
     var where = [];
     for (let key in values) {
       let value = values[key];
-      if (value.match('ENCRYPT\((.+)\)')) {
+      if (typeof value === 'string'
+          && value instanceof String
+          && value.match('ENCRYPT\((.+)\)')) {
         where.push(this.escapeId(key) + ' = ' + value);
       } else {
         where.push(this.escapeId(key) + ' = ' + this.escape(value));
@@ -245,8 +247,15 @@ module.exports = class Database {
       let values = [];
 
       for (var key in thisData) {
+        let value = thisData[key];
         keys.push(this.escapeId(key));
-        values.push(this.escape(thisData[key]));
+        if (typeof value === 'string'
+          && value instanceof String
+          && value.match('ENCRYPT\((.+)\)')) {
+          values.push(value);
+        } else {
+          values.push(this.escape(value));
+        }
       }
 
       queries.push(
