@@ -192,7 +192,6 @@ module.exports = class Database {
     for (let key in values) {
       let value = values[key];
       if (typeof value === 'string'
-          && value instanceof String
           && value.match('ENCRYPT\((.+)\)')) {
         where.push(this.escapeId(key) + ' = ' + value);
       } else {
@@ -250,7 +249,6 @@ module.exports = class Database {
         let value = thisData[key];
         keys.push(this.escapeId(key));
         if (typeof value === 'string'
-          && value instanceof String
           && value.match('ENCRYPT\((.+)\)')) {
           values.push(value);
         } else {
