@@ -1,6 +1,6 @@
 {
   "name": "alanzhao-mysql-orm",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "main": "Database.js",
   "scripts": {
