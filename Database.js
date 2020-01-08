@@ -191,7 +191,11 @@ module.exports = class Database {
     var where = [];
     for (let key in values) {
       let value = values[key];
-      where.push(this.escapeId(key) + ' = ' + this.escape(value));
+      if (value.match('ENCRYPT\((.+)\)')) {
+        where.push(this.escapeId(key) + ' = ' + value);
+      } else {
+        where.push(this.escapeId(key) + ' = ' + this.escape(value));
+      }
     }
 
     var query = 'SELECT * FROM ' + this.escapeId(table);
