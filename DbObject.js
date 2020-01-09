@@ -64,7 +64,7 @@ module.exports = class DbObject {
   /**
    * Update entity with multiple matching criteria
    */
-  updateBy(table, criteria, values, callback = null) {
+  updateBy(criteria, values, callback = null) {
     return this._db.updateBy(this.tableName, criteria, values, callback);
   }
 
@@ -78,7 +78,7 @@ module.exports = class DbObject {
   /**
    * Delete entity with multiple matching criteria
    */
-  deleteBy(table, criteria, values, callback = null) {
+  deleteBy(criteria, values, callback = null) {
     return this._db.deleteBy(this.tableName, criteria, values, callback);
   }
 
