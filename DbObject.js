@@ -142,4 +142,11 @@ module.exports = class DbObject {
   escapeId(value) {
     return this._db.escapeId(value);
   }
+
+  /**
+   * Get last query.
+   */
+  getLastQuery() {
+    return this._db.lastQuery;
+  }
 }

@@ -22,6 +22,7 @@ module.exports = class Database {
     this._defaultConnectTimeout = 10000;
     this._defaultDbPort = 3306;
     this._logError = true;
+    this._lastQuery = null;
     this._cache = {};
 
     this._dbHost = configs.dbHost;
@@ -116,6 +117,7 @@ module.exports = class Database {
     if (values.length > 0) {
       this._connection.query(query, values, (error, results, fields) => {
         this._lastResults = results;
+        this._lastQuery = query;
         let errorMessage = error ? error.sqlMessage + ', ' + error.sql : null;
 
         if (errorMessage && this._logError) {
@@ -846,6 +848,13 @@ module.exports = class Database {
    */
   get insertedId() {
     return this._lastResults.insertId;
+  }
+
+  /**
+   * Get last query
+   */
+  get lastQuery() {
+    return this._lastQuery;
   }
 
   /**
