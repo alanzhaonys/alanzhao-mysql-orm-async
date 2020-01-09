@@ -301,9 +301,7 @@ module.exports = class Database {
    */
   updateBy(table, criteria, values, callback = null) {
     var where = [];
-    var criteriaKeys = Object.keys(criteria);
-
-    criteriaKeys.forEach(key => {
+    for (let key in criteria) {
       let value = criteria[key];
       if (typeof value === 'string'
           && value.match('ENCRYPT\((.+)\)')) {
@@ -311,12 +309,10 @@ module.exports = class Database {
       } else {
         where.push(this.escapeId(key) + ' = ' + this.escape(value));
       }
-    });
+    }
 
     var set = [];
-    var valueKeys = Object.keys(values);
-
-    valueKeys.forEach(key => {
+    for (let key in values) {
       let value = values[key];
       if (typeof value === 'string'
           && value.match('ENCRYPT\((.+)\)')) {
@@ -324,7 +320,7 @@ module.exports = class Database {
       } else {
         set.push(this.escapeId(key) + ' = ' + this.escape(value));
       }
-    });
+    }
 
     var query = 'UPDATE ' + this.escapeId(table) + ' SET ';
     query += set.join(', ');
@@ -352,10 +348,10 @@ module.exports = class Database {
   /**
    * Construct delete query with multiple matching criteria
    */
-  deleteBy(table, values, callback = null) {
+  deleteBy(table, criteria, callback = null) {
     var where = [];
-    for (let key in values) {
-      let value = values[key];
+    for (let key in criteria) {
+      let value = criteria[key];
       if (typeof value === 'string'
           && value.match('ENCRYPT\((.+)\)')) {
         where.push(this.escapeId(key) + ' = ' + value);
@@ -387,10 +383,10 @@ module.exports = class Database {
   /**
    * If a record exist by matching multiple critera
    */
-  existsBy(table, values, excludeId = null, callback) {
+  existsBy(table, criteria, excludeId = null, callback) {
     var where = [];
-    for (let key in values) {
-      let value = values[key];
+    for (let key in criteria) {
+      let value = criteria[key];
       if (typeof value === 'string'
           && value.match('ENCRYPT\((.+)\)')) {
         where.push(this.escapeId(key) + ' = ' + value);
