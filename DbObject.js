@@ -62,6 +62,13 @@ module.exports = class DbObject {
   }
 
   /**
+   * Update entity with multiple matching criteria
+   */
+  updateBy(table, criteria, values, callback = null) {
+    return this._db.updateBy(this.tableName, criteria, values, callback);
+  }
+
+  /**
    * Delete an entity by ID
    */
   delete(id, callback = null) {
@@ -69,10 +76,24 @@ module.exports = class DbObject {
   }
 
   /**
+   * Delete entity with multiple matching criteria
+   */
+  deleteBy(table, criteria, values, callback = null) {
+    return this._db.deleteBy(this.tableName, criteria, values, callback);
+  }
+
+  /**
    * Does entity ID exist?
    */
   exists(id, callback) {
     return this._db.exists(this.tableName, id, callback);
+  }
+
+  /**
+   * Does entity exists matching multiple criteria
+   */
+  existsBy(criteria, values, excludeId, callback = null) {
+    return this._db.existsBy(this.tableName, criteria, values, excludeId, callback);
   }
 
   /**

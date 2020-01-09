@@ -305,7 +305,12 @@ module.exports = class Database {
 
     criteriaKeys.forEach(key => {
       let value = criteria[key];
-      where.push(this.escapeId(key) + ' = ' + this.escape(value));
+      if (typeof value === 'string'
+          && value.match('ENCRYPT\((.+)\)')) {
+        where.push(this.escapeId(key) + ' = ' + value);
+      } else {
+        where.push(this.escapeId(key) + ' = ' + this.escape(value));
+      }
     });
 
     var set = [];
@@ -313,7 +318,12 @@ module.exports = class Database {
 
     valueKeys.forEach(key => {
       let value = values[key];
-      set.push(this.escapeId(key) + ' = ' + this.escape(value));
+      if (typeof value === 'string'
+          && value.match('ENCRYPT\((.+)\)')) {
+        set.push(this.escapeId(key) + ' = ' + value);
+      } else {
+        set.push(this.escapeId(key) + ' = ' + this.escape(value));
+      }
     });
 
     var query = 'UPDATE ' + this.escapeId(table) + ' SET ';
@@ -346,7 +356,12 @@ module.exports = class Database {
     var where = [];
     for (let key in values) {
       let value = values[key];
-      where.push(this.escapeId(key) + ' = ' + this.escape(value));
+      if (typeof value === 'string'
+          && value.match('ENCRYPT\((.+)\)')) {
+        where.push(this.escapeId(key) + ' = ' + value);
+      } else {
+        where.push(this.escapeId(key) + ' = ' + this.escape(value));
+      }
     }
 
     var query =
@@ -376,7 +391,12 @@ module.exports = class Database {
     var where = [];
     for (let key in values) {
       let value = values[key];
-      where.push(this.escapeId(key) + ' = ' + this.escape(value));
+      if (typeof value === 'string'
+          && value.match('ENCRYPT\((.+)\)')) {
+        where.push(this.escapeId(key) + ' = ' + value);
+      } else {
+        where.push(this.escapeId(key) + ' = ' + this.escape(value));
+      }
     }
 
     var query =
