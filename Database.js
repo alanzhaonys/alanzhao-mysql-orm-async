@@ -132,6 +132,7 @@ module.exports = class Database {
     } else {
       this._connection.query(query, (error, results, fields) => {
         this._lastResults = results;
+        this._lastQuery = query;
         let errorMessage = null;
 
         if (error) {
