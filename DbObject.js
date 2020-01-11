@@ -131,7 +131,7 @@ module.exports = class DbObject {
         position: position
       });
     }
-   
+
     return true;
   }
 

@@ -32,7 +32,7 @@ databaseTest = async () => {
 
   test('database.connect()', async () => {
     try {
-    expect(await database.connect()).toBe(true);
+      expect(await database.connect()).toBe(true);
     } catch (error) {
       throw new Exception(error.message);
     }
@@ -93,7 +93,7 @@ databaseTest = async () => {
 
   const dbTest = new DbTest(database);
   dbTest.tableName = testTable;
-  
+
   test('tableName getter method', () => {
     expect(dbTest.tableName).toBe(testTable);
   });
@@ -108,12 +108,16 @@ databaseTest = async () => {
   });
 
   test('find() method', async () => {
-    const results = await dbTest.find({id: 1});
+    const results = await dbTest.find({
+      id: 1
+    });
     expect(results.length).toBe(1);
   });
 
   test('findOne() method', async () => {
-    const row = await dbTest.findOne({id: 1});
+    const row = await dbTest.findOne({
+      id: 1
+    });
     expect(row.id).toBe(1);
   });
 
@@ -143,7 +147,8 @@ databaseTest = async () => {
         field_int: 77,
         field_decimal: 99.9,
         field_text: 'This is another text field'
-      }]
+      }
+    ]
 
     expect(await dbTest.create(values2)).toBe(true);
   });
@@ -169,7 +174,9 @@ databaseTest = async () => {
       field_text: 'This is updated text field'
     };
 
-    expect(await dbTest.updateBy({ id: 1}, values)).toBe(true);
+    expect(await dbTest.updateBy({
+      id: 1
+    }, values)).toBe(true);
   });
 
   test('delete() method', async () => {
@@ -177,7 +184,9 @@ databaseTest = async () => {
   });
 
   test('deleteBy() method', async () => {
-    expect(await dbTest.deleteBy({id: 1})).toBe(true);
+    expect(await dbTest.deleteBy({
+      id: 1
+    })).toBe(true);
   });
 
   test('exists() method', async () => {
@@ -185,13 +194,23 @@ databaseTest = async () => {
   });
 
   test('existsBy() method', async () => {
-    expect(await dbTest.existsBy({id: 1})).toBe(false);
+    expect(await dbTest.existsBy({
+      id: 1
+    })).toBe(false);
   });
 
   test('updatePositionColumnById() method', async () => {
-    expect(await dbTest.updatePositionColumnById({1: 1, 2: 2, 3: 3})).toBe(true);
-    expect(await dbTest.findColumn({id: 2}, 'position')).toBe(2);
-    expect(await dbTest.findColumn({id: 3}, 'position')).toBe(3);
+    expect(await dbTest.updatePositionColumnById({
+      1: 1,
+      2: 2,
+      3: 3
+    })).toBe(true);
+    expect(await dbTest.findColumn({
+      id: 2
+    }, 'position')).toBe(2);
+    expect(await dbTest.findColumn({
+      id: 3
+    }, 'position')).toBe(3);
   });
 
   test('cache methods', () => {

@@ -32,7 +32,7 @@ databaseTest = async () => {
 
   test('database.connect()', async () => {
     try {
-    expect(await database.connect()).toBe(true);
+      expect(await database.connect()).toBe(true);
     } catch (error) {
       throw new Exception(error.message);
     }
@@ -182,7 +182,9 @@ databaseTest = async () => {
 
   test('exists() method', async () => {
     expect(await database.exists(testTable, 1)).toBe(true);
-    expect(await database.existsBy(testTable, {id: 1}, 4)).toBe(true);
+    expect(await database.existsBy(testTable, {
+      id: 1
+    }, 4)).toBe(true);
     expect(await database.exists(testTable, 4)).toBe(false);
   });
 
@@ -279,12 +281,12 @@ databaseTest = async () => {
 
     // An object
     let args2 = {
-        entity: 'Test',
-        method: 'get',
-        args: [
-          // querying row # 1
-          1
-        ]
+      entity: 'Test',
+      method: 'get',
+      args: [
+        // querying row # 1
+        1
+      ]
     };
 
     let results1 = await database.getDb(args1);
