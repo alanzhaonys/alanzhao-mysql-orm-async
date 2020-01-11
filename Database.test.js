@@ -90,7 +90,7 @@ databaseTest = async () => {
     query += "PRIMARY KEY (`id`)";
     query += ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
     let results = await database.query(query);
-    
+
     expect(await database.tableExists(testTable)).toBe(true);
   });
 
@@ -241,21 +241,21 @@ databaseTest = async () => {
     };
 
     let args = [{
-      entity: 'Test',
-      method: 'get',
-      args: [
-        // querying row # 1
-        1
-      ]
-    },
+        entity: 'Test',
+        method: 'get',
+        args: [
+          // querying row # 1
+          1
+        ]
+      },
       {
-      entity: 'Test',
-      method: 'get',
-      args: [
-        // querying row # 2
-        2
-      ]
-    },
+        entity: 'Test',
+        method: 'get',
+        args: [
+          // querying row # 2
+          2
+        ]
+      },
     ];
 
     let results = await database.getDb(args);

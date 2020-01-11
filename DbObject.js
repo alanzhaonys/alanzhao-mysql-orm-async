@@ -104,7 +104,9 @@ module.exports = class DbObject {
     for (let i = 0; i < entityIds.length; i++) {
       let entityId = entityIds[i];
       let position = data[entityId];
-      await this._db.update(this.tableName, entityId, {position: position});
+      await this._db.update(this.tableName, entityId, {
+        position: position
+      });
     }
   }
 

@@ -434,10 +434,10 @@ module.exports = class Database {
   /**
    * Whether or not a table exists
    */
-     async tableExists(table) {
-       const query = 'SHOW TABLES LIKE "' + table + '"';
-       return (await this.scalar(query) === table) ? true : false;
-     }
+  async tableExists(table) {
+    const query = 'SHOW TABLES LIKE "' + table + '"';
+    return (await this.scalar(query) === table) ? true : false;
+  }
 
   /**
    * Run queries in transaction
@@ -597,7 +597,7 @@ module.exports = class Database {
       'COLUMN_NAME',
       'COLUMN_TYPE'
     ];
-    
+
     var query =
       'SELECT ' +
       columns.join(', ') +
