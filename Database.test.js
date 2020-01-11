@@ -31,7 +31,11 @@ databaseTest = async () => {
   const database = new Database(dbConfigs);
 
   test('database.connect()', async () => {
+    try {
     expect(await database.connect()).toBe(true);
+    } catch (error) {
+      throw new Exception(error.message);
+    }
   });
 
   test('database.connect() exception', async () => {
@@ -69,8 +73,8 @@ databaseTest = async () => {
 
   test('format() method', () => {
     let query = "SELECT * FROM ?? WHERE ?? = ?";
-    let inserts = ['users', 'id', 10];
-    expect(database.format(query, inserts))
+    let values = ['users', 'id', 10];
+    expect(database.format(query, values))
       .toEqual('SELECT * FROM `users` WHERE `id` = 10');
   });
 
@@ -95,31 +99,38 @@ databaseTest = async () => {
   });
 
   test('getTableColumns() method', async () => {
-    let results = await database.getTableColumns(testTable, ['created', 'updated']);
-    expect(results[0]).toBe('id');
+    database.clearCache('fake-cache-id');
+    let results1 = await database.getTableColumns(testTable, ['created', 'updated']);
+    let results2 = await database.getTableColumns(testTable);
+    expect(results2[0]).toBe('id');
   });
 
   test('getTableColumnDataTypes() method', async () => {
-    let results = await database.getTableColumnDataTypes(testTable, ['created', 'updated']);
-    expect(results.id).toBe('int(11) unsigned');
+    let results1 = await database.getTableColumnDataTypes(testTable, ['created', 'updated']);
+    let results2 = await database.getTableColumnDataTypes(testTable);
+    expect(results2.id).toBe('int(11) unsigned');
   });
 
   test('getTableColumnDefaultValues() method', async () => {
-    let results = await database.getTableColumnDefaultValues(testTable, ['created', 'updated']);
-    expect(results.field_bool).toBe('0');
-    expect(results.field_decimal).toBe('0.0000');
+    let results1 = await database.getTableColumnDefaultValues(testTable, ['created', 'updated']);
+    let results2 = await database.getTableColumnDefaultValues(testTable);
+    expect(results1.field_bool).toBe('0');
+    expect(results2.field_decimal).toBe('0.0000');
   });
 
   test('query() method', async () => {
     let query = "SELECT * FROM ?? WHERE ?? = ?";
     let values = [testTable, 'id', 1];
     let results = await database.query(query, values);
+    expect(database.lastQuery).toBe(database.format(query, values));
   });
 
   test('execute() method', async () => {
     let query = "SELECT * FROM " + testTable + " WHERE id = ?";
     let values = [1];
     let results = await database.execute(query, values);
+    expect(database.lastResults).not.toBe(null);
+    expect(database.lastQuery).toBe(database.format(query, values));
   });
 
   test('insert() method', async () => {
@@ -152,6 +163,7 @@ databaseTest = async () => {
     ];
 
     expect(await database.insert(testTable, data2)).toBe(true);
+    expect(database.insertedId).not.toBe(null);
   });
 
   test('update() method', async () => {
@@ -170,6 +182,7 @@ databaseTest = async () => {
 
   test('exists() method', async () => {
     expect(await database.exists(testTable, 1)).toBe(true);
+    expect(await database.existsBy(testTable, {id: 1}, 4)).toBe(true);
     expect(await database.exists(testTable, 4)).toBe(false);
   });
 
@@ -222,7 +235,7 @@ databaseTest = async () => {
 
   test('bool() method', async () => {
     let query = 'SELECT field_bool FROM ' + testTable + ' WHERE ID = 1';
-    expect(await database.scalar(query)).toEqual(0);
+    expect(await database.bool(query)).toEqual(false);
   });
 
   test('integer() method', async () => {
@@ -233,6 +246,7 @@ databaseTest = async () => {
   test('decimal() method', async () => {
     let query = 'SELECT field_decimal FROM ' + testTable + ' WHERE ID = 1';
     expect(await database.decimal(query, 3)).toEqual(99.900);
+    expect(await database.decimal(query)).toEqual(99.90);
   });
 
   test('getDb() method on DbTest object', async () => {
@@ -240,7 +254,8 @@ databaseTest = async () => {
       'Test': DbTest
     };
 
-    let args = [{
+    // An array of objects
+    let args1 = [{
         entity: 'Test',
         method: 'get',
         args: [
@@ -256,10 +271,25 @@ databaseTest = async () => {
           2
         ]
       },
+      {
+        entity: 'Missing',
+        method: 'get',
+      },
     ];
 
-    let results = await database.getDb(args);
-    expect(results.length).toBe(2);
+    // An object
+    let args2 = {
+        entity: 'Test',
+        method: 'get',
+        args: [
+          // querying row # 1
+          1
+        ]
+    };
+
+    let results1 = await database.getDb(args1);
+    let results2 = await database.getDb(args2);
+    expect(results1.length).toBe(2);
   });
 
   test('delete() method', async () => {

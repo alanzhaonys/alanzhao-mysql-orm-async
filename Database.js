@@ -110,7 +110,7 @@ module.exports = class Database {
   async execute(query, values = []) {
     const [results, fields] = await this._connection.execute(query, values);
     this._lastResults = results;
-    this._lastQuery = query;
+    this._lastQuery = this.format(query, values);
     return results;
   }
 
@@ -120,7 +120,7 @@ module.exports = class Database {
   async query(query, values = []) {
     const [results, fields] = await this._connection.query(query, values);
     this._lastResults = results;
-    this._lastQuery = query;
+    this._lastQuery = this.format(query, values);
     return results;
   }
 
@@ -152,10 +152,10 @@ module.exports = class Database {
   /**
    * Construct a SELECT query
    */
-  async getBy(table, values, limit = null, orderBy = null) {
+  async getBy(table, criteria, limit = null, orderBy = null) {
     var where = [];
-    for (let key in values) {
-      let value = values[key];
+    for (let key in criteria) {
+      let value = criteria[key];
       if (typeof value === 'string' &&
         value.match('ENCRYPT\((.+)\)')) {
         where.push(this.escapeId(key) + ' = ' + value);
@@ -318,7 +318,7 @@ module.exports = class Database {
       }
     }
 
-    const query =
+    var query =
       'SELECT COUNT(id) FROM ' +
       this.escapeId(table) +
       ' WHERE ' +
@@ -398,7 +398,7 @@ module.exports = class Database {
    */
   async bool(query) {
     const value = await this.scalar(query);
-    switch (value.toLowerCase()) {
+    switch (value.toString().toLowerCase()) {
       case "true":
       case "yes":
       case "y":
