@@ -2,14 +2,10 @@
  * @author Alan Zhao <azhao6060@gmail.com>
  */
 
-const mysql = require('mysql');
-
-const dbClasses = {};
-
-class DatabaseError extends Error {}
+const mysql = require('mysql2/promise');
 
 /**
- * A database wrapper for npm 'mysql' package
+ * A database wrapper for npm 'mysql2' package
  */
 module.exports = class Database {
   /**
@@ -17,13 +13,12 @@ module.exports = class Database {
    */
   constructor(configs) {
     this._connection = null;
-    this._connectionError = null;
-    this._lastResults = null;
-    this._defaultConnectTimeout = 10000;
+    this._defaultDbConnectTimeout = 10000;
     this._defaultDbPort = 3306;
-    this._logError = true;
     this._lastQuery = null;
+    this._lastResults = null;
     this._cache = {};
+    this._dbClasses = {};
 
     this._dbHost = configs.dbHost;
     this._dbName = configs.dbName;
@@ -31,56 +26,53 @@ module.exports = class Database {
     this._dbPassword = configs.dbPassword;
     this._dbPort = configs.dbPort ?
       configs.dbPort : this._defaultDbPort;
-    this._connectTimeout = configs.connectTimeout ?
-      configs.connectTimeout : this._defaultConnectTimeout;
+    this._dbConnectTimeout = configs.dbConnectTimeout ?
+      configs.dbConnectTimeout : this._defaultDbConnectTimeout;
   }
 
   /**
    * Connect to database
    */
-  connect(callback, ssl = false, sslCertPath = null) {
-    if (!this._connection) {
-      var options = {
-        host: this._dbHost,
-        port: this._dbPort,
-        user: this._dbUser,
-        password: this._dbPassword,
-        database: this._dbName,
-        connectTimeout: this._connectTimeout,
-        dateStrings: true,
-        multipleStatements: true
-      };
+  async connect(ssl = false, sslCerts = null) {
+    var options = {
+      host: this._dbHost,
+      port: this._dbPort,
+      user: this._dbUser,
+      password: this._dbPassword,
+      database: this._dbName,
+      connectTimeout: this._dbConnectTimeout,
+      dateStrings: true,
+      multipleStatements: true
+    };
 
-      if (ssl) {
-        if (sslCertPath === 'Amazon RDS') {
-          options['ssl'] = 'Amazon RDS';
-        } else {
-          const fs = require('fs');
-          options['ssl'] = {
-            ca: fs.readFileSync(sslCertPath + '/ca.pem'),
-            cert: fs.readFileSync(sslCertPath + '/client-cert.pem'),
-            key: fs.readFileSync(sslCertPath + '/client-key.pem')
-          };
-        }
+    if (ssl) {
+      if (Array.isArray(sslCerts)) {
+        const fs = require('fs');
+        options['ssl'] = {
+          ca: fs.readFileSync(sslCerts.ca),
+          cert: fs.readFileSync(sslCerts.client),
+          key: fs.readFileSync(sslCerts.key)
+        };
+      } else if (typeof sslCerts === 'string' &&
+        sslCerts === 'Amazon RDS') {
+        options['ssl'] = 'Amazon RDS';
       }
-
-      this._connection = mysql.createConnection(options);
-
-      this._connection.connect(error => {
-        if (error) {
-          //this._connectionError = error.toString();
-          this._connectionError = new DatabaseError('Unable to connect.');
-        } else {
-          this._connectionError = null;
-        }
-        // Callback with error
-        return callback(this._connectionError);
-      });
-    } else {
-      //console.log('Re-using database connection...');
-      // Callback with error if any
-      return callback(this._connectionError);
     }
+
+    this._connection = await mysql.createConnection(options);
+
+    return true;
+  }
+
+  /**
+   * Close database connection
+   */
+  async close() {
+    await this._connection.end();
+    this.clearConnection();
+    this.clearAllCache();
+
+    return true;
   }
 
   /**
@@ -111,91 +103,61 @@ module.exports = class Database {
   }
 
   /**
+   * Prepare and run query
+   * Differences between execute() and query():
+   * https://github.com/sidorares/node-mysql2/issues/382
+   */
+  async execute(query, values = []) {
+    const [results, fields] = await this._connection.execute(query, values);
+    this._lastResults = results;
+    this._lastQuery = query;
+    return results;
+  }
+
+  /**
    * Run a query
    */
-  query(query, values = [], callback = null) {
-    if (values.length > 0) {
-      this._connection.query(query, values, (error, results, fields) => {
-        this._lastResults = results;
-        this._lastQuery = query;
-        let errorMessage = error ? error.sqlMessage + ', ' + error.sql : null;
-
-        if (errorMessage && this._logError) {
-          console.error(errorMessage);
-          console.error(query);
-        }
-
-        if (callback) {
-          return callback(results, errorMessage);
-        }
-      });
-    } else {
-      this._connection.query(query, (error, results, fields) => {
-        this._lastResults = results;
-        this._lastQuery = query;
-        let errorMessage = null;
-
-        if (error) {
-          if (error.sqlMessage) {
-            errorMessage = error.sqlMessage + ', ' + error.sql;
-          } else {
-            errorMessage = error.toString();
-          }
-        }
-
-        if (errorMessage && this._logError) {
-          console.error(errorMessage);
-          console.error(query);
-        }
-
-        if (callback) {
-          return callback(results, errorMessage);
-        }
-      });
-    }
+  async query(query, values = []) {
+    const [results, fields] = await this._connection.query(query, values);
+    this._lastResults = results;
+    this._lastQuery = query;
+    return results;
   }
 
   /**
    * Get one record by ID
    */
-  get(table, id, callback) {
-    return this.getBy(table, {
+  async get(table, id) {
+    const rows = await this.getBy(table, {
       id: id
-    }, 1, null, callback);
+    }, 1);
+    return rows[0];
   }
 
   /**
    * Get all records from a table
    */
-  getAll(table, orderBy = null, callback) {
-    return this.getBy(
-      table,
-      {},
-      null,
-      orderBy,
-      callback
-    );
+  async getAll(table, orderBy = null) {
+    return await this.getBy(table, {}, null, orderBy);
   }
 
   /**
    * Get all record count of a table
    */
-  getAllCount(table, callback) {
-    var query = 'SELECT COUNT(id) FROM ' + this.escapeId(table);
-    this.integer(query, (count, error) => {
-      return callback(count, error);
-    });
+  async getAllCount(table) {
+    const query = 'SELECT COUNT(id) FROM ' + this.escapeId(table);
+    return await this.integer(query);
   }
 
   /**
-   * Construct a SELECT query with multiple matching criteria
+   * Construct a SELECT query
    */
-  getBy(table, values, limit = null, orderBy = null, callback) {
+  async getBy(table, values, limit = null, orderBy = null) {
     var where = [];
     for (let key in values) {
       let value = values[key];
-      if (typeof value === 'string'
-          && value.match('ENCRYPT\((.+)\)')) {
+      if (typeof value === 'string' &&
+        value.match('ENCRYPT\((.+)\)')) {
         where.push(this.escapeId(key) + ' = ' + value);
       } else {
         where.push(this.escapeId(key) + ' = ' + this.escape(value));
@@ -212,31 +174,18 @@ module.exports = class Database {
       query += ' ORDER BY ' + orderBy;
     }
 
-    if (limit > 0) {
+    if (Number.isInteger(limit) && limit > 0) {
       query += ' LIMIT ' + limit;
     }
 
-    this.query(query, [], (results, error) => {
-      if (!results) {
-        return callback(null, error);
-      }
-
-      if (results.length === 0) {
-        return callback([], null);
-      }
-
-      if (limit === 1) {
-        return callback(this.export(results[0]), null);
-      }
-
-      return callback(this.export(results), null);
-    });
+    const results = await this.query(query);
+    return this.export(results);
   }
 
   /**
    * Construct single or multiple INSERT queries
    */
-  insert(table, data, callback = null) {
+  async insert(table, data) {
     if (!Array.isArray(data)) {
       data = [data];
     }
@@ -251,8 +200,8 @@ module.exports = class Database {
       for (var key in thisData) {
         let value = thisData[key];
         keys.push(this.escapeId(key));
-        if (typeof value === 'string'
-          && value.match('ENCRYPT\((.+)\)')) {
+        if (typeof value === 'string' &&
+          value.match('ENCRYPT\((.+)\)')) {
           values.push(value);
         } else {
           values.push(this.escape(value));
@@ -270,44 +219,27 @@ module.exports = class Database {
       );
     }
 
-    if (queries.length === 0) {
-      return callback(false, 'Nothing to insert');
-    }
-
-    this.query(queries.join('; '), [], (results, error) => {
-      if (callback) {
-        if (!results) {
-          return callback(false, error);
-        }
-        // multiple insert
-        if (queries.length > 1) {
-          return callback(true, null);
-        } else {
-          // single insert
-          return callback(results.insertId, null);
-        }
-      }
-    });
+    return (await this.query(queries.join('; '))) ? true : false;
   }
 
   /**
-   * Construct an UPDATE query by ID
+   * Construct an UPDATE by ID query
    */
-  update(table, id, values, callback = null) {
-    this.updateBy(table, {
+  async update(table, id, values) {
+    return await this.updateBy(table, {
       id: id
-    }, values, callback);
+    }, values);
   }
 
   /**
-   * Construct an UPDATE query with multiple matching criteria
+   * Construct an update by criteria query
    */
-  updateBy(table, criteria, values, callback = null) {
+  async updateBy(table, criteria, values) {
     var where = [];
     for (let key in criteria) {
       let value = criteria[key];
-      if (typeof value === 'string'
-          && value.match('ENCRYPT\((.+)\)')) {
+      if (typeof value === 'string' &&
+        value.match('ENCRYPT\((.+)\)')) {
         where.push(this.escapeId(key) + ' = ' + value);
       } else {
         where.push(this.escapeId(key) + ' = ' + this.escape(value));
@@ -317,8 +249,8 @@ module.exports = class Database {
     var set = [];
     for (let key in values) {
       let value = values[key];
-      if (typeof value === 'string'
-          && value.match('ENCRYPT\((.+)\)')) {
+      if (typeof value === 'string' &&
+        value.match('ENCRYPT\((.+)\)')) {
         set.push(this.escapeId(key) + ' = ' + value);
       } else {
         set.push(this.escapeId(key) + ' = ' + this.escape(value));
@@ -329,76 +261,64 @@ module.exports = class Database {
     query += set.join(', ');
     query += ' WHERE ' + where.join(' AND ');
 
-    this.query(query, [], (results, error) => {
-      if (callback) {
-        if (!results) {
-          return callback(false, error);
-        }
-        return callback(true, null);
-      }
+    return (await this.query(query)) ? true : false;
+  }
+
+  /**
+   * Construct delete by ID query
+   */
+  async delete(table, id) {
+    return await this.deleteBy(table, {
+      id: id
     });
   }
 
   /**
-   * Construct delete query by ID
+   * Construct delete by criteria query
    */
-  delete(table, id, callback = null) {
-    this.deleteBy(table, {
-      id: id
-    }, callback);
-  }
-
-  /**
-   * Construct delete query with multiple matching criteria
-   */
-  deleteBy(table, criteria, callback = null) {
+  async deleteBy(table, criteria) {
     var where = [];
     for (let key in criteria) {
       let value = criteria[key];
-      if (typeof value === 'string'
-          && value.match('ENCRYPT\((.+)\)')) {
+      if (typeof value === 'string' &&
+        value.match('ENCRYPT\((.+)\)')) {
         where.push(this.escapeId(key) + ' = ' + value);
       } else {
         where.push(this.escapeId(key) + ' = ' + this.escape(value));
       }
     }
 
-    var query =
+    const query =
       'DELETE FROM ' + this.escapeId(table) + ' WHERE ' + where.join(' AND ');
 
-    this.query(query, [], (results, error) => {
-      if (!results) {
-        return callback(false, error);
-      }
-      return callback(true, null);
-    });
+    return (await this.query(query)) ? true : false;
   }
 
   /**
    * If a record exists by ID
    */
-  exists(table, id, callback = null) {
-    this.existsBy(table, {
+  async exists(table, id) {
+    return await this.existsBy(table, {
       id: id
-    }, null, callback);
+    });
   }
 
   /**
-   * If a record exist by matching multiple critera
+   * Whether or not a record exists by matching critera
    */
-  existsBy(table, criteria, excludeId = null, callback) {
+  async existsBy(table, criteria, excludeId = null) {
     var where = [];
     for (let key in criteria) {
       let value = criteria[key];
-      if (typeof value === 'string'
-          && value.match('ENCRYPT\((.+)\)')) {
+      if (typeof value === 'string' &&
+        value.match('ENCRYPT\((.+)\)')) {
         where.push(this.escapeId(key) + ' = ' + value);
       } else {
         where.push(this.escapeId(key) + ' = ' + this.escape(value));
       }
     }
 
-    var query =
+    const query =
       'SELECT COUNT(id) FROM ' +
       this.escapeId(table) +
       ' WHERE ' +
@@ -408,168 +328,140 @@ module.exports = class Database {
       query += ' AND id != ' + this.escape(excludeId);
     }
 
-    this.integer(query, (count, error) => {
-      if (count > 0) {
-        return callback(true, null);
-      }
-      return callback(false, error);
-    });
+    return (await this.integer(query) > 0) ? true : false;
   }
 
   /**
-   * Return results as array
+   * Return result as array
    */
-  array(query, key = null, callback) {
-    this.query(query, [], (results, error) => {
-      var array = [];
-      results.forEach(result => {
-        if (key) {
-          array.push(result[key]);
-        } else {
-          array.push(result[Object.keys(result)[0]]);
-        }
-      });
-      return callback(array, error);
-    });
+  async array(query, key = null) {
+    var array = [];
+    const results = await this.query(query);
+
+    for (let i = 0; i < results.length; i++) {
+      let result = results[i];
+      if (key) {
+        array.push(result[key]);
+      } else {
+        array.push(result[Object.keys(result)[0]]);
+      }
+    }
+
+    return array;
   }
 
   /**
    * Return results with custom key and values
    */
-  kvObject(query, key, value, callback) {
-    this.query(query, [], (results, error) => {
-      var object = {};
-      results.forEach(result => {
-        object[result[key]] = result[value];
-      });
-      return callback(object, error);
-    });
+  async kvObject(query, key, value) {
+    var object = {};
+    const results = await this.query(query);
+
+    for (let i = 0; i < results.length; i++) {
+      let result = results[i];
+      object[result[key]] = result[value];
+    }
+
+    return object;
   }
 
   /**
-   * Return first row of result set
+   * Return first row of the result set
    */
-  row(query, callback) {
-    this.query(query, [], (results, error) => {
-      if (!results) {
-        return callback(null, error);
-      }
-      if (results[0]) {
-        var row = this.export(results[0]);
-        return callback(row, null);
-      }
-      return callback(null, 'row is not found');
-    });
+  async row(query) {
+    const results = await this.query(query);
+
+    if (Array.isArray(results) && results[0]) {
+      return this.export(results[0]);
+    }
+
+    return null;
   }
 
   /**
    * Return scalar value
    */
-  scalar(query, callback) {
-    this.query(query, [], (results, error) => {
-      if (!results) {
-        return callback(null, error);
-      }
-      if (results[0]) {
-        var result = results[0];
-        var value = result[Object.keys(result)[0]];
-        return callback(value, null);
-      }
-      return callback(null, 'value is not found');
-    });
+  async scalar(query) {
+    const results = await this.query(query);
+
+    if (Array.isArray(results) && results[0]) {
+      var result = results[0];
+      var value = result[Object.keys(result)[0]];
+      return value;
+    }
+
+    return null;
   }
 
   /**
    * Return boolean value
    */
-  bool(query, callback) {
-    this.query(query, [], (results, error) => {
-      // Don't care about 'results', return boolean value instead
-      return callback(error ? false : true, error);
-    });
+  async bool(query) {
+    const value = await this.scalar(query);
+    switch (value.toLowerCase()) {
+      case "true":
+      case "yes":
+      case "y":
+      case "1":
+        return true;
+      case "false":
+      case "no":
+      case "n":
+      case "0":
+        return false;
+      default:
+        return null;
+    }
   }
 
   /**
    * Return integer value
    */
-  integer(query, callback) {
-    this.scalar(query, (value, error) => {
-      if (value !== '' && value !== null) {
-        return callback(parseInt(value), null);
-      }
-      return callback(null, error);
-    });
+  async integer(query) {
+    const value = await this.scalar(query);
+    return (value !== null && value !== '') ? parseInt(value) : null;
   }
 
   /**
    * Return decimal value
    */
-  decimal(query, decimal = 2, callback) {
-    this.scalar(query, (value, error) => {
-      if (value !== '' && value !== null) {
-        return callback(parseFloat(value.toFixed(decimal)), null);
-      }
-      return callback(null, error);
-    });
+  async decimal(query, decimal = 2) {
+    const value = await this.scalar(query);
+    return (value !== null && value !== '') ?
+      parseFloat(value.toFixed(decimal)) : null;
   }
+
+  /**
+   * Whether or not a table exists
+   */
+     async tableExists(table) {
+       const query = 'SHOW TABLES LIKE "' + table + '"';
+       return (await this.scalar(query) === table) ? true : false;
+     }
 
   /**
    * Run queries in transaction
    */
-  transaction(queries, callback) {
-    this._connection.beginTransaction(error => {
-      if (error) {
-        return callback(error);
-      }
-
-      this.query(queries, [], (results, queryError) => {
-        if (queryError) {
-          this._connection.rollback(() => {
-            return callback(queryError);
-          });
-        } else {
-          this._connection.commit(commitError => {
-            if (commitError) {
-              this._connection.rollback(() => {
-                return callback(commitError);
-              });
-            }
-            return callback(null);
-          });
-        }
-      });
-    });
-  }
-
-  /**
-   * Export results
-   */
-  export (results) {
-    // JSON manipulation to remove unwanted mysql methods
-    return !results ? null : JSON.parse(JSON.stringify(results));
-  }
-
-  /**
-   * Close database connection
-   */
-  close(callback = null) {
-    if (this._connection) {
-      this._connection.end(error => {
-        if (callback) {
-          return callback(error === undefined ? null : error);
-        }
-        this.clearConnection();
-      });
+  async transaction(queries) {
+    await this._connection.beginTransaction();
+    try {
+      const query = Array.isArray(queries) ? queries.join(';') : queries;
+      await this.query(query);
+      await this._connection.commit();
+      return true;
+    } catch (error) {
+      this._connection.rollback();
     }
+    return true;
   }
 
   /**
    * Duplicate a table
    */
-  duplicateTable(from, to, callback = null) {
+  async duplicateTable(from, to) {
     var fromTable = this.escapeId(from);
     var toTable = this.escapeId(to);
-    var query =
+    const query =
       'CREATE TABLE ' +
       toTable +
       ' LIKE ' +
@@ -578,62 +470,50 @@ module.exports = class Database {
       toTable +
       ' SELECT * FROM ' +
       fromTable;
-    this.bool(query, (bool, error) => {
-      if (callback) {
-        callback(bool, error);
-      }
-    });
+
+    return (await this.query(query)) ? true : false;
   }
 
   /**
    * Truncate a table, useful for testing
    */
-  truncate(table, callback = null) {
-    var query = 'TRUNCATE TABLE ' + this.escapeId(table);
-    this.bool(query, (bool, error) => {
-      if (callback) {
-        callback(bool, error);
-      }
-    });
+  async truncate(table) {
+    const query = 'TRUNCATE TABLE ' + this.escapeId(table);
+    return (await this.query(query)) ? true : false;
   }
 
   /**
    * Drop a table, useful for testing
    */
-  drop(table, callback = null) {
-    var query = 'DROP TABLE ' + this.escapeId(table);
-    this.bool(query, (bool, error) => {
-      if (callback) {
-        callback(bool, error);
-      }
-    });
+  async drop(table) {
+    const query = 'DROP TABLE ' + this.escapeId(table);
+    return (await this.query(query)) ? true : false;
+
   }
 
   /**
    * Set an environment variable
    */
-  setEnvVar(name, value, callback) {
-    this.query('SET @' + name + ' = ' + this.escape(value), [], (results, error) => {
-      callback(results, error);
-    });
+  async setEnvVar(name, value) {
+    const query = 'SET @' + name + ' = ' + this.escape(value);
+    return (await this.query(query)) ? true : false;
   }
 
   /**
    * Get an environment variable
    */
-  getEnvVar(name, callback) {
-    this.scalar('SELECT @' + name, (scalar, error) => {
-      callback(scalar, error);
-    });
+  async getEnvVar(name) {
+    const query = 'SELECT @' + name;
+    return await this.scalar(query);
   }
 
   /**
    * Get table columns
    */
-  getTableColumns(table, ignoreColumns = [], callback) {
+  async getTableColumns(table, ignoreColumns = []) {
     var cacheId = 'table-columns-for-' + table;
     if (this._cache[cacheId]) {
-      return callback(this._cache[cacheId]);
+      return this._cache[cacheId];
     }
 
     var database = this.dbName;
@@ -649,24 +529,18 @@ module.exports = class Database {
       query += " AND COLUMN_NAME NOT IN ('" + ignoreColumns.join("', '") + "')";
     }
 
-    this.array(query, 'COLUMN_NAME', (results, error) => {
-      if (error) {
-        return callback(null, error);
-      } else {
-        var columns = this.export(results);
-        this.saveCache(cacheId, columns);
-        return callback(columns, null);
-      }
-    });
+    const columns = await this.array(query, 'COLUMN_NAME');
+    this.saveCache(cacheId, columns);
+    return columns;
   }
 
   /**
    * Get column default values
    */
-  getTableColumnDefaultValues(table, ignoreColumns = [], callback) {
+  async getTableColumnDefaultValues(table, ignoreColumns = []) {
     var cacheId = 'table-column-default-values-for-' + table;
     if (this._cache[cacheId]) {
-      return callback(this._cache[cacheId]);
+      return this._cache[cacheId];
     }
 
     var database = this.dbName;
@@ -679,6 +553,7 @@ module.exports = class Database {
       'COLUMN_KEY',
       'EXTRA'
     ];
+
     var query =
       'SELECT ' +
       columns.join(', ') +
@@ -697,24 +572,23 @@ module.exports = class Database {
 
     query += ' ORDER BY COLUMN_NAME ASC';
 
-    this.kvObject(query, 'COLUMN_NAME', 'COLUMN_DEFAULT', (results, error) => {
-      if (error) {
-        return callback(null, error);
-      } else {
-        var types = this.export(results);
-        this.saveCache(cacheId, types);
-        return callback(this.export(types), null);
-      }
-    });
+    const object = await this.kvObject(query, 'COLUMN_NAME', 'COLUMN_DEFAULT');
+    if (typeof object === 'object' && object !== null) {
+      var types = this.export(object);
+      this.saveCache(cacheId, types);
+      return this.export(types);
+    }
+
+    return null;
   }
 
   /**
    * Get column data types
    */
-  getTableColumnDataTypes(table, ignoreColumns = [], callback) {
+  async getTableColumnDataTypes(table, ignoreColumns = []) {
     var cacheId = 'table-column-data-types-for-' + table;
     if (this._cache[cacheId]) {
-      return callback(this._cache[cacheId]);
+      return this._cache[cacheId];
     }
 
     var database = this.dbName;
@@ -723,6 +597,7 @@ module.exports = class Database {
       'COLUMN_NAME',
       'COLUMN_TYPE'
     ];
+    
     var query =
       'SELECT ' +
       columns.join(', ') +
@@ -741,15 +616,21 @@ module.exports = class Database {
 
     query += ' ORDER BY COLUMN_NAME ASC';
 
-    this.kvObject(query, 'COLUMN_NAME', 'COLUMN_TYPE', (results, error) => {
-      if (error) {
-        return callback(null, error);
-      } else {
-        var types = this.export(results);
-        this.saveCache(cacheId, types);
-        return callback(this.export(types), null);
-      }
-    });
+    const kvObject = await this.kvObject(query, 'COLUMN_NAME', 'COLUMN_TYPE');
+    if (typeof kvObject === 'object' && kvObject !== null) {
+      this.saveCache(cacheId, kvObject);
+      return this.export(kvObject);
+    }
+
+    return null;
+  }
+
+  /**
+   * Export results
+   */
+  export (results) {
+    // JSON manipulation to remove unwanted mysql methods
+    return !results ? null : JSON.parse(JSON.stringify(results));
   }
 
   /**
@@ -767,58 +648,59 @@ module.exports = class Database {
   }
 
   /**
-   * Call method(s) of a DbObject
+   * Clear all cache
    */
-  getDb(args, callback) {
+  clearAllCache() {
+    this._cache = {};
+  }
+
+  /**
+   * Clear connection
+   */
+  clearConnection() {
+    this._connection = null;
+  }
+
+  /**
+   * Call method(s) on multiple DbObjects at the same time
+   */
+  async getDb(args) {
     var self = this;
     var results = [];
-    var completedCount = 0;
 
     if (!Array.isArray(args)) {
       args = [args];
     }
 
-    args.forEach((arg, argCount) => {
+    for (let argCount = 0; argCount < args.length; argCount++) {
+      let arg = args[argCount];
       let entity = arg.entity;
+      // Has to be a ASYNC method on the object
       let method = arg.method;
       // Get a copy of the 'args' array
       let vars = arg.args ? arg.args.slice(0) : [];
-      let dbObject = dbClasses[entity];
+      let dbObject = this._dbClasses[entity];
 
       //console.log(argCount + ': ' + entity + ' -> ' + method);
       //console.log('args: ' + JSON.stringify(vars));
 
       if (!dbObject) {
-        return callback(null, 'Database object "' + entity + '" is not found');
+        continue;
       }
+
       let obj = new dbObject(self);
+      const thisResults = await obj[method](...vars);
+      results[argCount] = thisResults;
+    }
 
-      let dbCallback = (result, error) => {
-        if (error) {
-          return callback(null, error);
-        }
-
-        // Add to results
-        results[argCount] = result;
-
-        if (++completedCount === args.length) {
-          if (args.length === 1) {
-            return callback(results[0], null);
-          }
-          return callback(results, null);
-        }
-      };
-
-      vars.push(dbCallback);
-      obj[method](...vars);
-    });
+    return results;
   }
 
   /**
-   * Turn log error on/off
+   * Set dbClasses
    */
-  set logError(bool) {
-    this._logError = bool;
+  set dbClasses(dbClasses) {
+    this._dbClasses = dbClasses;
   }
 
   /**
@@ -830,6 +712,10 @@ module.exports = class Database {
 
   get dbPort() {
     return this._dbPort;
+  }
+
+  get dbConnectTimeout() {
+    return this._dbConnectTimeout;
   }
 
   get dbUser() {
@@ -849,6 +735,13 @@ module.exports = class Database {
    */
   get insertedId() {
     return this._lastResults.insertId;
+  }
+
+  /**
+   * Get last results
+   */
+  get lastResults() {
+    return this._lastResults;
   }
 
   /**

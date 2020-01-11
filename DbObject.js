@@ -15,104 +15,97 @@ module.exports = class DbObject {
   /**
    * Get entity by ID
    */
-  get(id, callback) {
-    return this._db.get(this.tableName, id, callback);
+  async get(id) {
+    return await this._db.get(this.tableName, id);
   }
 
   /**
    * Get all entities
    */
-  getAll(orderBy = null, callback) {
-    return this._db.getAll(this.tableName, orderBy, callback);
+  async getAll(orderBy = null) {
+    return await this._db.getAll(this.tableName, orderBy);
   }
 
   /**
    * Get all entity count
    */
-  getAllCount(callback) {
-    return this._db.getAllCount(this.tableName, callback);
+  async getAllCount() {
+    return await this._db.getAllCount(this.tableName);
   }
 
   /**
    * Find entities
    */
-  find(values, orderBy, callback) {
-    return this._db.getBy(this.tableName, values, null, orderBy, callback);
+  async find(values, orderBy) {
+    return await this._db.getBy(this.tableName, values, null, orderBy);
   }
 
   /**
    * Find one entity
    */
-  findOne(values, callback) {
-    return this._db.getBy(this.tableName, values, 1, null, callback);
+  async findOne(values) {
+    return await this._db.getBy(this.tableName, values, 1, null);
   }
 
   /**
    * Create an entity
    */
-  create(values, callback = null) {
-    return this._db.insert(this.tableName, values, callback);
+  async create(values) {
+    return await this._db.insert(this.tableName, values);
   }
 
   /**
    * Update an entity by ID
    */
-  update(id, values, callback = null) {
-    return this._db.update(this.tableName, id, values, callback);
+  async update(id, values) {
+    return await this._db.update(this.tableName, id, values);
   }
 
   /**
    * Update entity with multiple matching criteria
    */
-  updateBy(criteria, values, callback = null) {
-    return this._db.updateBy(this.tableName, criteria, values, callback);
+  async updateBy(criteria, values) {
+    return await this._db.updateBy(this.tableName, criteria, values);
   }
 
   /**
    * Delete an entity by ID
    */
-  delete(id, callback = null) {
-    return this._db.delete(this.tableName, id, callback);
+  async delete(id) {
+    return await this._db.delete(this.tableName, id);
   }
 
   /**
    * Delete entity with multiple matching criteria
    */
-  deleteBy(criteria, callback = null) {
-    return this._db.deleteBy(this.tableName, criteria, callback);
+  async deleteBy(criteria) {
+    return await this._db.deleteBy(this.tableName, criteria);
   }
 
   /**
    * Does entity ID exist?
    */
-  exists(id, callback) {
-    return this._db.exists(this.tableName, id, callback);
+  async exists(id) {
+    return await this._db.exists(this.tableName, id);
   }
 
   /**
    * Does entity exists matching multiple criteria
    */
-  existsBy(criteria, excludeId, callback = null) {
-    return this._db.existsBy(this.tableName, criteria, excludeId, callback);
+  async existsBy(criteria, excludeId) {
+    return await this._db.existsBy(this.tableName, criteria, excludeId);
   }
 
   /**
    * Update entities' position column
    */
-  updatePositioningById(data, callback) {
+  async updatePositioningById(data) {
     var entityIds = Object.keys(data);
-    var processedCount = 0;
-    entityIds.forEach(entityId => {
+    for (let i = 0; i < entityIds.length; i++) {
+      let entityId = entityIds[i];
       let position = data[entityId];
-      this._db.update(this.tableName, entityId, {
-        position: position
-      }, () => {
-        processedCount++;
-        if (processedCount === entityIds.length) {
-          return callback();
-        }
-      });
-    });
+      await this._db.update(this.tableName, entityId, {position: position});
+    }
   }
 
   /**

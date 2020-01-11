@@ -1,14 +1,17 @@
 {
-  "name": "alanzhao-mysql-orm",
+  "name": "alanzhao-mysql-orm-async",
   "version": "1.2.4",
   "description": "",
-  "main": "Database.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --coverage --silent"
   },
   "author": "Alan Zhao",
   "license": "MIT",
   "dependencies": {
-    "mysql": "^2.17.1"
+    "dotenv": "^8.2.0",
+    "mysql2": "^2.1.0"
+  },
+  "devDependencies": {
+    "jest": "^24.9.0"
   }
 }
