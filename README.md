@@ -7,7 +7,7 @@ such as PHP. Using nested callbacks or Promises clutters up your code. This is w
 To further clean and speed up the database query procedures, I added two database abstraction layers that wrap all the NPM `mysql2` functionality.
 `Database.js` provides the common methods for all database needs. `DbObject.js` further abstracts the methods to provide one-to-one mapping of a database table to an object.
 
-## main.js
+## Example: main.js
 
     main = async () => {
       // Parse your enviornment variables saved in .env file
@@ -19,27 +19,14 @@ To further clean and speed up the database query procedures, I added two databas
       // DbUser extends from DbObject
       const DbUser = require('./DbUser');
 
-      // Assign enviornment variables
-      const dbEndpoint = process.env.DB_ENDPOINT;
-      const dbUser = process.env.DB_USER;
-      const dbPassword = process.env.DB_PASSWORD;
-      const dbName = process.env.DB_NAME;
-      const dbPort = process.env.DB_PORT;
-      const dbConnectTimeout = process.env.DB_CONNECT_TIMEOUT;
-
-      // Check database credentials
-      if (!dbEndpoint || !dbUser || !dbPassword || !dbName) {
-        throw new Error('Database credential is missing');
-      }
-
       // Construct database configs
       const dbConfigs = {
-        'dbHost': dbEndpoint,
-        'dbUser': dbUser,
-        'dbPassword': dbPassword,
-        'dbName': dbName,
-        'dbPort': dbPort,
-        'dbConnectTimeout': dbConnectTimeout
+        'dbHost': process.env.DB_ENDPOINT,
+        'dbUser': process.env.DB_USER,
+        'dbPassword': process.env.DB_PASSWORD,
+        'dbName': process.env.DB_NAME,
+        'dbPort': process.env.DB_PORT,
+        'dbConnectTimeout': process.env.DB_CONNECT_TIMEOUT
       };
 
       // Instantiate database
@@ -113,9 +100,9 @@ To further clean and speed up the database query procedures, I added two databas
         this.tableName = 'users';
       }
 
-      async getSomeVerySepcialUsers() {
+      async getSomeVerySpecialUsers() {
         const query = "SELECT * FROM users WHERE status = 'special'";
-        const users = await this.db.query(query);
+        const users = await this._db.query(query);
         return users;
       }
     }
