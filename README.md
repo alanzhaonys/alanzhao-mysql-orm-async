@@ -154,7 +154,7 @@
     * [.array(query, [column])](#Database+array) ⇒ <code>array</code>
     * [.kvObject(query, key, value)](#Database+kvObject) ⇒ <code>Object</code>
     * [.row(query)](#Database+row) ⇒ <code>array</code>
-    * [.scalar(query)](#Database+scalar) ⇒ <code>string</code> \| <code>number</code> \| <code>boolean</code> \| <code>decimal</code>
+    * [.scalar(query)](#Database+scalar) ⇒ <code>string</code> \| <code>number</code> \| <code>boolean</code>
     * [.bool(query)](#Database+bool) ⇒ <code>boolean</code>
     * [.integer(query)](#Database+integer) ⇒ <code>number</code>
     * [.decimal(query, [decimal])](#Database+decimal) ⇒ <code>number</code>

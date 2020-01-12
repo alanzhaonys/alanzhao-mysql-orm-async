@@ -552,7 +552,7 @@ module.exports = class Database {
   /**
    * Return scalar value
    * @param {string} query The query to execute
-   * @returns {string|number|boolean|decimal} Returns the result as scalar
+   * @returns {string|number|boolean} Returns the result as scalar
    */
   async scalar(query) {
     const results = await this.query(query);
