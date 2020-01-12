@@ -37,12 +37,16 @@ main = async () => {
   // Connect to database
   await database.connect();
 
-  // Basic query example
+  //
+  // Examples on using the main Database class
+  //
+  
+  // Basic query
   const query = 'SELECT * FROM users ORDER BY ID ASC';
   const users = database.query(query);
   
   for (let i = 0; i < users.length; i++) {
-    var users = user[i];
+    let user = users[i];
     console.log(user.firstName + ' ' + user.lastName);
   }
 
@@ -54,7 +58,29 @@ main = async () => {
   await database.delete('users', 10);
   console.log('Deleted a user #10');
 
-  // See API documentation below for more usage information
+  //
+  // Examples on using the DbObject extended class
+  //
+ 
+  // Instantiate DbUser, pass the database connection
+  const dbUser = new DbUser(database);
+
+  // Call method on the DbUser
+  const specialUsers = await dbUser.getSomeVerySpecialUsers();
+  for (let i = 0; i < specialUsers.length; i++) {
+    let user = users[i];
+    console.log(user.firstName + ' ' + user.lastName);
+  }
+
+  // Use the inherited methods
+  
+  // User ID #10 exists? 
+  const userExists = await dbUser.exists(10);
+  console.log('User #10 exists: ' + userExists);
+
+  // Update an user
+  await dbUser.update(10, { firstName: 'New First Name', lastName: 'New Last Name' });
+  console.log('User #10 has been updated');
 }
 
 try {
@@ -62,5 +88,25 @@ try {
 } catch (error) {
   // All errors will get caught here
   console.log('Main error: ' + error.message);
+}
+```
+
+## DbUser.js
+```
+const DbObject = require('./DbObject');
+
+module.exports = class DbUser extends DbObject {
+  constructor(db) {
+    super(db);
+
+    // Users table
+    this.tableName = 'users';
+  }
+
+  async getSomeVerySepcialUsers() {
+    const query = "SELECT * FROM users WHERE status = 'special'";
+    const users = await this.db.query(query);
+    return users;
+  }
 }
 ```
