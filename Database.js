@@ -2,14 +2,15 @@
  * @author Alan Zhao <azhao6060@gmail.com>
  */
 
-const mysql = require('mysql2/promise');
+//const mysql = require('mysql2/promise');
 
 /**
  * A database wrapper for npm 'mysql2' package
  */
-module.exports = class Database {
+class Database {
   /**
    * Construct database connection
+   * @constructor
    */
   constructor(configs) {
     this._connection = null;
@@ -32,6 +33,10 @@ module.exports = class Database {
 
   /**
    * Connect to database
+   * @param {boolean} Using SSL?
+   * @param {array} The SSL certificate paths
+   * @returns {boolean} Returns true on successful connection
+   * @throws Database connection error
    */
   async connect(ssl = false, sslCerts = null) {
     var options = {
@@ -66,6 +71,8 @@ module.exports = class Database {
 
   /**
    * Close database connection
+   * @returns {boolean} Returns true on successful close
+   * @throws Database close error
    */
   async close() {
     await this._connection.end();
@@ -77,6 +84,8 @@ module.exports = class Database {
 
   /**
    * Escape string value
+   * @param {string} Value to escape
+   * @returns {string} Escaped value
    */
   escape(value) {
     return this._connection.escape(value);
@@ -84,6 +93,8 @@ module.exports = class Database {
 
   /**
    * Escape identifier(database/table/column name)
+   * @param {string} Value to escape
+   * @returns {string} Escaped value
    */
   escapeId(key) {
     return this._connection.escapeId(key);
@@ -92,11 +103,13 @@ module.exports = class Database {
   /**
    * Prepare a query with multiple insertion points,
    * utilizing the proper escaping for ids and values
-   *
-   * Example:
-   *    var sql = "SELECT * FROM ?? WHERE ?? = ?";
-   *    var inserts = ['users', 'id', userId];
-   *    db.format(sql, insert);
+   * @example:
+   *    var query = "SELECT * FROM ?? WHERE ?? = ?";
+   *    var values = ['users', 'id', userId];
+   *    db.format(query, values);
+   * @param {string} Query to format
+   * @param {array} The array of values
+   * @returns {string} The formatted query
    */
   format(query, values) {
     return mysql.format(query, values);
@@ -105,7 +118,14 @@ module.exports = class Database {
   /**
    * Prepare and run query
    * Differences between execute() and query():
-   * https://github.com/sidorares/node-mysql2/issues/382
+   * @see https://github.com/sidorares/node-mysql2/issues/382
+   * @example
+   *    var query = "SELECT * FROM ?? WHERE ?? = ?";
+   *    var values = ['users', 'id', userId];
+   *    await db.execute(query, values);
+   * @param {string} Query to execute
+   * @param {array} The values of the query
+   * @returns {array} Results of query
    */
   async execute(query, values) {
     const [results, fields] = await this._connection.execute(query, values);
@@ -116,6 +136,16 @@ module.exports = class Database {
 
   /**
    * Run a query
+   * @example
+   *    var query = "SELECT * FROM ?? WHERE ?? = ?";
+   *    var values = ['users', 'id', userId];
+   *    await db.query(query, values);
+   * or
+   *    var query = "SELECT * FROM users WHERE id = 10";
+   *    await db.query(query);
+   * @param {string} Query to execute
+   * @param {array} The values of the query, optional
+   * @returns {array} Results of query
    */
   async query(query, values = []) {
     const [results, fields] = await this._connection.query(query, values);
@@ -126,6 +156,9 @@ module.exports = class Database {
 
   /**
    * Get one record by ID
+   * @param {string} The table name
+   * @param {number} The primary ID
+   * @returns {Object} The row as an object
    */
   async get(table, id) {
     const rows = await this.getBy(table, {
@@ -136,6 +169,9 @@ module.exports = class Database {
 
   /**
    * Get all records from a table
+   * @param {string} The table name
+   * @param {string} The order by syntax, example "id DESC"
+   * @returns {array} The result array
    */
   async getAll(table, orderBy = null) {
     return await this.getBy(table, {}, null, orderBy);
@@ -143,6 +179,8 @@ module.exports = class Database {
 
   /**
    * Get all record count of a table
+   * @param {string} The table name
+   * @returns {integer} The total count of the table
    */
   async getAllCount(table) {
     const query = 'SELECT COUNT(id) FROM ' + this.escapeId(table);
@@ -150,7 +188,16 @@ module.exports = class Database {
   }
 
   /**
-   * Construct a SELECT query
+   * Construct a SELECT query and execute it
+   * @param {string} The table name
+   * @param {array} The criteria as an array, example:
+   *   {
+   *     id: 10,
+   *     status: 'expired'
+   *   }
+   * @param {number} The number of results to return, optional
+   * @param {string} The order by syntax, example "id DESC", optional
+   * @returns {array} The result array
    */
   async getBy(table, criteria, limit = null, orderBy = null) {
     var where = [];
@@ -183,7 +230,24 @@ module.exports = class Database {
   }
 
   /**
-   * Construct single or multiple INSERT queries
+   * Construct single or multiple INSERT queries and execute
+   * @param {string} The table name
+   * @param {array|Object} The data to insert as a single object or array of objects
+   * Example:
+   *   {
+   *     id: 10,
+   *     firstName: 'John',
+   *     lastName: 'Doe',
+   *     status: 'active'
+   *   }
+   *   or
+   *   [{
+   *     id: 10,
+   *     firstName: 'John',
+   *     lastName: 'Doe',
+   *     status: 'active'
+   *   }, ... ]
+   * @returns {boolean} Returns true on successful insertion
    */
   async insert(table, data) {
     if (!Array.isArray(data)) {
