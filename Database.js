@@ -98,7 +98,7 @@ module.exports = class Database {
    *    var inserts = ['users', 'id', userId];
    *    db.format(sql, insert);
    */
-  format(query, values = []) {
+  format(query, values) {
     return mysql.format(query, values);
   }
 
@@ -107,7 +107,7 @@ module.exports = class Database {
    * Differences between execute() and query():
    * https://github.com/sidorares/node-mysql2/issues/382
    */
-  async execute(query, values = []) {
+  async execute(query, values) {
     const [results, fields] = await this._connection.execute(query, values);
     this._lastResults = results;
     this._lastQuery = this.format(query, values);

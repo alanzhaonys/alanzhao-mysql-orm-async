@@ -123,14 +123,17 @@ databaseTest = async () => {
   });
 
   test('query() method', async () => {
-    let query = "SELECT * FROM ?? WHERE ?? = ?";
+    let query1 = 'SELECT * FROM ?? WHERE ?? = ?';
     let values = [testTable, 'id', 1];
-    let results = await database.query(query, values);
-    expect(database.lastQuery).toBe(database.format(query, values));
+    let query2 = 'SELECT * FROM ' + testTable + ' WHERE id = 1';
+    let results1 = await database.query(query1, values);
+    expect(database.lastQuery).toBe(database.format(query1, values));
+    let results2 = await database.query(query2);
+    expect(results2.length).toBe(0);
   });
 
   test('execute() method', async () => {
-    let query = "SELECT * FROM " + testTable + " WHERE id = ?";
+    let query = 'SELECT * FROM ' + testTable + ' WHERE id = ?';
     let values = [1];
     let results = await database.execute(query, values);
     expect(database.lastResults).not.toBe(null);
@@ -197,9 +200,16 @@ databaseTest = async () => {
     expect(row.id).toBe(1);
   });
 
+  test('getBy() method', async () => {
+    let results = await database.getBy(testTable, {id: 1}, 1, 'id DESC');
+    expect(results).not.toBe(null); 
+  });
+
   test('getAll() method', async () => {
-    let results = await database.getAll(testTable, 'id DESC');
-    expect(results.length).toBe(3);
+    let results1 = await database.getAll(testTable, 'id DESC');
+    expect(results1.length).toBe(3);
+    let results2 = await database.getAll(testTable);
+    expect(results2.length).toBe(3);
   });
 
   test('getAllCount() method', async () => {
