@@ -1,13 +1,14 @@
-//const mysql = require('mysql2/promise');
+const mysql = require('mysql2/promise');
 
 /**
  * A database wrapper for npm 'mysql2' package
  * @author Alan Zhao <azhao6060@gmail.com>
  */
-//module.exports =
-  class Database {
+module.exports = class Database {
   /**
    * Construct database connection
+   * @params {array} configs The database connection configurations
+   * @return {void}
    * @constructor
    */
   constructor(configs) {
@@ -15,72 +16,84 @@
     /**
      * Connection instance of the database
      * @type {Object}
+     * @access private
      */
     this._connection = null;
 
     /**
      * Default database connection time out in miliseconds. Default is 10 seconds.
      * @type {number}
+     * @access private
      */
     this._defaultDbConnectTimeout = 10000;
 
     /**
      * Default database port. Default is 3306.
      * @type {number}
+     * @access private
      */
     this._defaultDbPort = 3306;
 
     /**
      * Last query recorded
      * @type {string}
+     * @access private
      */
     this._lastQuery = null;
 
     /**
      * Last result set recorded
      * @type {array}
+     * @access private
      */
     this._lastResults = null;
 
     /**
      * Holds the cache
      * @type {Object}
+     * @access private
      */
     this._cache = {};
 
     /**
      * Holds the DbObject mapping
      * @type {Object}
+     * @access private
      */
     this._dbClasses = {};
 
     /**
      * Database host
      * @type {string}
+     * @access private
      */
     this._dbHost = configs.dbHost;
 
     /**
      * Database name
      * @type {string}
+     * @access private
      */
     this._dbName = configs.dbName;
 
     /**
      * Database user
      * @type {string}
+     * @access private
      */
     this._dbUser = configs.dbUser;
 
     /**
      * Database password
      * @type {string}
+     * @access private
      */
     this._dbPassword = configs.dbPassword;
 
     /**
      * Database port
      * @type {string}
+     * @access private
      */
     this._dbPort = configs.dbPort ?
       configs.dbPort : this._defaultDbPort;
@@ -88,6 +101,7 @@
     /**
      * Database connection timeout
      * @type {number}
+     * @access private
      */
     this._dbConnectTimeout = configs.dbConnectTimeout ?
       configs.dbConnectTimeout : this._defaultDbConnectTimeout;
@@ -296,7 +310,7 @@
    * @param {string} table The table name
    * @param {array|Object} values The data to insert as a single object or array of objects
    * @example
-   * // Example for data parameter:
+   * // Example for `values` parameter
    * {
    *   id: 10,
    *   firstName: 'John',
@@ -855,6 +869,15 @@
   }
 
   /**
+   * Get cache by ID
+   * @param {string} cacheId The ID of the cache to get
+   * @returns {array} Returns the cached result set
+   */
+  getCache(cacheId) {
+    return this._cache[cacheId];
+  }
+
+  /**
    * Clear connection
    * @returns {void}
    */
@@ -866,34 +889,31 @@
    * Call method(s) on multiple DbObjects at the same time
    * @param {array|Object} args The arguments
    * @example
-   * // Example for `args`
-   *    let args = [
-   *    {
-   *      entity: 'Test',
-   *      method: 'get',
-   *      args: [
-   *       // querying row # 1
-   *       1
-   *      ]
-   *    },
-   *    {
-   *      entity: 'Test',
-   *      method: 'get',
-   *      args: [
-   *       // querying row # 2
-   *       2
-   *      ]
-   *    }
-   *  ];
+   * // Example for `args` parameter
+   * let args = [{
+   *   entity: 'User',
+   *   method: 'get',
+   *   args: [
+   *     // querying row # 1
+   *     1
+   *   ]
+   * }, {
+   *   entity: 'User',
+   *   method: 'get',
+   *   args: [
+   *     // querying row # 2
+   *     2
+   *   ]
+   * }];
    * // or
-   *  let args = {
-   *      entity: 'Test',
-   *      method: 'get',
-   *      args: [
-   *       // querying row # 1
-   *       1
-   *      ]
-   *    };
+   * let args = {
+   *   entity: 'User',
+   *   method: 'get',
+   *   args: [
+   *     // querying row # 1
+   *     1
+   *   ]
+   * };
    * @returns {array} Returns an array of results
    */
   async getDb(args) {
@@ -932,7 +952,7 @@
    * Set dbClasses
    * @param {array} dbClasses The DbObject mapping to set
    * @example
-   * // Example for `dbClasses`
+   * // Example for `dbClasses` parameter
    * let dbClasses = {
    *   'User': DbUser,
    *   'Job': DbJob
@@ -944,34 +964,56 @@
   }
 
   /**
-   * Getter methods
+   * Get dbHost variable
+   * @returns {string}
    */
   get dbHost() {
     return this._dbHost;
   }
 
+  /**
+   * Get dbPort variable
+   * @returns {number}
+   */
   get dbPort() {
     return this._dbPort;
   }
 
+  /**
+   * Get dbConnectTimeout variable
+   * @returns {number}
+   */
   get dbConnectTimeout() {
     return this._dbConnectTimeout;
   }
 
+  /**
+   * Get dbUser variable
+   * @returns {string}
+   */
   get dbUser() {
     return this._dbUser;
   }
 
+  /**
+   * Get dbPassword variable
+   * @returns {string}
+   */
   get dbPassword() {
     return this._dbPassword;
   }
 
+  /**
+   * Get dbName variable
+   * @returns {string}
+   */
   get dbName() {
     return this._dbName;
   }
 
   /**
    * Get last inserted ID
+   * @returns {number}
    */
   get insertedId() {
     return this._lastResults.insertId;
@@ -979,6 +1021,7 @@
 
   /**
    * Get last results
+   * @returns {array}
    */
   get lastResults() {
     return this._lastResults;
@@ -986,6 +1029,7 @@
 
   /**
    * Get last query
+   * @returns {string}
    */
   get lastQuery() {
     return this._lastQuery;
@@ -993,6 +1037,7 @@
 
   /**
    * Get number of deleted rows
+   * @returns {number}
    */
   get affectedRows() {
     return this._lastResults.affectedRows;
@@ -1000,6 +1045,7 @@
 
   /**
    * Get number of updated rows
+   * @returns {number}
    */
   get changedRows() {
     return this._lastResults.changedRows;

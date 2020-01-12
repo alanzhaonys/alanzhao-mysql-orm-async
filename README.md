@@ -1,147 +1,138 @@
 # Usage
 
 ## main.js
-```
-main = async () => {
-  // Parse your enviornment variables saved in .env file
-  require('dotenv').config();
 
-  // Main database class
-  const Database = require('./Database');
-  // DbUser extends from DbObject
-  const DbUser = require('./DbUser');
+    main = async () => {
+      // Parse your enviornment variables saved in .env file
+      require('dotenv').config();
 
- // Get enviornment variables from
-  const dbEndpoint = process.env.DB_ENDPOINT;
-  const dbUser = process.env.DB_USER;
-  const dbPassword = process.env.DB_PASSWORD;
-  const dbName = process.env.DB_NAME;
-  const dbPort = process.env.DB_PORT;
-  const dbConnectTimeout = process.env.DB_CONNECT_TIMEOUT;
+      // Main database class
+      const Database = require('./Database');
+      // DbUser extends from DbObject
+      const DbUser = require('./DbUser');
 
-  // Check database credentials
-  if (!dbEndpoint || !dbUser || !dbPassword || !dbName) {
-    throw new Error('Database credential is missing');
-  }
+     // Get enviornment variables from
+      const dbEndpoint = process.env.DB_ENDPOINT;
+      const dbUser = process.env.DB_USER;
+      const dbPassword = process.env.DB_PASSWORD;
+      const dbName = process.env.DB_NAME;
+      const dbPort = process.env.DB_PORT;
+      const dbConnectTimeout = process.env.DB_CONNECT_TIMEOUT;
 
-  // Construct database configs
-  const dbConfigs = {
-    'dbHost': dbEndpoint,
-    'dbUser': dbUser,
-    'dbPassword': dbPassword,
-    'dbName': dbName,
-    'dbPort': dbPort,
-    'dbConnectTimeout': dbConnectTimeout
-  };
+      // Check database credentials
+      if (!dbEndpoint || !dbUser || !dbPassword || !dbName) {
+        throw new Error('Database credential is missing');
+      }
 
-  // Instantiate database
-  const database = new Database(dbConfigs);
-  // Connect to database
-  await database.connect();
+      // Construct database configs
+      const dbConfigs = {
+        'dbHost': dbEndpoint,
+        'dbUser': dbUser,
+        'dbPassword': dbPassword,
+        'dbName': dbName,
+        'dbPort': dbPort,
+        'dbConnectTimeout': dbConnectTimeout
+      };
 
-  //
-  // Examples on using the main Database class
-  //
+      // Instantiate database
+      const database = new Database(dbConfigs);
+      // Connect to database
+      await database.connect();
 
-  // Basic query
-  const query = 'SELECT * FROM users ORDER BY ID ASC';
-  const users = await database.query(query);
+      //
+      // Examples on using the main Database class
+      //
 
-  for (let i = 0; i < users.length; i++) {
-    let user = users[i];
-    console.log(user.firstName + ' ' + user.lastName);
-  }
+      // Basic query
+      const query = 'SELECT * FROM users ORDER BY ID ASC';
+      const users = await database.query(query);
 
-  // Output total users in Database
-  const totalUsers = await database.getAllCount('users'));
-  console.log('Total users: ' + totalUsers);
+      for (let i = 0; i < users.length; i++) {
+        let user = users[i];
+        console.log(user.firstName + ' ' + user.lastName);
+      }
 
-  // Delete user ID of 10
-  await database.delete('users', 10);
-  console.log('Deleted a user #10');
+      // Output total users in Database
+      const totalUsers = await database.getAllCount('users'));
+      console.log('Total users: ' + totalUsers);
 
-  //
-  // Examples on using the DbObject extended class
-  //
+      // Delete user ID of 10
+      await database.delete('users', 10);
+      console.log('Deleted a user #10');
 
-  // Instantiate DbUser, pass the database connection
-  const dbUser = new DbUser(database);
+      //
+      // Examples on using the DbObject extended class
+      //
 
-  // Call method on the DbUser
-  const specialUsers = await dbUser.getSomeVerySpecialUsers();
-  for (let i = 0; i < specialUsers.length; i++) {
-    let user = users[i];
-    console.log(user.firstName + ' ' + user.lastName);
-  }
+      // Instantiate DbUser, pass the database connection
+      const dbUser = new DbUser(database);
 
-  // Use the inherited methods
+      // Call method on the DbUser
+      const specialUsers = await dbUser.getSomeVerySpecialUsers();
+      for (let i = 0; i < specialUsers.length; i++) {
+        let user = users[i];
+        console.log(user.firstName + ' ' + user.lastName);
+      }
 
-  // User ID #10 exists?
-  const userExists = await dbUser.exists(10);
-  console.log('User #10 exists: ' + userExists);
+      // Use the inherited methods
 
-  // Update an user
-  await dbUser.update(10, { firstName: 'New First Name', lastName: 'New Last Name' });
-  console.log('User #10 has been updated');
-}
+      // User ID #10 exists?
+      const userExists = await dbUser.exists(10);
+      console.log('User #10 exists: ' + userExists);
 
-try {
-  main();
-} catch (error) {
-  // All errors will get caught here
-  console.log('Main error: ' + error.message);
-}
-```
+      // Update an user
+      await dbUser.update(10, { firstName: 'New First Name', lastName: 'New Last Name' });
+      console.log('User #10 has been updated');
+    }
 
-## DbUser.js
-```
-const DbObject = require('./DbObject');
+    try {
+      main();
+    } catch (error) {
+      // All errors will get caught here
+      console.log('Main error: ' + error.message);
+    }
 
-module.exports = class DbUser extends DbObject {
-  constructor(db) {
-    super(db);
+## Example: DbUser.js
 
-    // Users table
-    this.tableName = 'users';
-  }
+    const DbObject = require('./DbObject');
 
-  async getSomeVerySepcialUsers() {
-    const query = "SELECT * FROM users WHERE status = 'special'";
-    const users = await this.db.query(query);
-    return users;
-  }
-}
-```
+    module.exports = class DbUser extends DbObject {
+      constructor(db) {
+        super(db);
+
+        // Users table
+        this.tableName = 'users';
+      }
+
+      async getSomeVerySepcialUsers() {
+        const query = "SELECT * FROM users WHERE status = 'special'";
+        const users = await this.db.query(query);
+        return users;
+      }
+    }
 
 ## API
 
 <a name="Database"></a>
 
-## Database
+### Database
 **Kind**: global class  
+**Params**: <code>array</code> configs The database connection configurations  
 
 * [Database](#Database)
     * [new Database()](#new_Database_new)
-    * [._connection](#Database+_connection) : <code>Object</code>
-    * [._defaultDbConnectTimeout](#Database+_defaultDbConnectTimeout) : <code>number</code>
-    * [._defaultDbPort](#Database+_defaultDbPort) : <code>number</code>
-    * [._lastQuery](#Database+_lastQuery) : <code>string</code>
-    * [._lastResults](#Database+_lastResults) : <code>array</code>
-    * [._cache](#Database+_cache) : <code>Object</code>
-    * [._dbClasses](#Database+_dbClasses) : <code>Object</code>
-    * [._dbHost](#Database+_dbHost) : <code>string</code>
-    * [._dbName](#Database+_dbName) : <code>string</code>
-    * [._dbUser](#Database+_dbUser) : <code>string</code>
-    * [._dbPassword](#Database+_dbPassword) : <code>string</code>
-    * [._dbPort](#Database+_dbPort) : <code>string</code>
-    * [._dbConnectTimeout](#Database+_dbConnectTimeout) : <code>number</code>
     * [.dbClasses](#Database+dbClasses) ⇒ <code>void</code>
-    * [.dbHost](#Database+dbHost)
-    * [.insertedId](#Database+insertedId)
-    * [.lastResults](#Database+lastResults)
-    * [.lastQuery](#Database+lastQuery)
-    * [.affectedRows](#Database+affectedRows)
-    * [.changedRows](#Database+changedRows)
+    * [.dbHost](#Database+dbHost) ⇒ <code>string</code>
+    * [.dbPort](#Database+dbPort) ⇒ <code>number</code>
+    * [.dbConnectTimeout](#Database+dbConnectTimeout) ⇒ <code>number</code>
+    * [.dbUser](#Database+dbUser) ⇒ <code>string</code>
+    * [.dbPassword](#Database+dbPassword) ⇒ <code>string</code>
+    * [.dbName](#Database+dbName) ⇒ <code>string</code>
+    * [.insertedId](#Database+insertedId) ⇒ <code>number</code>
+    * [.lastResults](#Database+lastResults) ⇒ <code>array</code>
+    * [.lastQuery](#Database+lastQuery) ⇒ <code>string</code>
+    * [.affectedRows](#Database+affectedRows) ⇒ <code>number</code>
+    * [.changedRows](#Database+changedRows) ⇒ <code>number</code>
     * [.connect(ssl, sslCerts)](#Database+connect) ⇒ <code>boolean</code>
     * [.close()](#Database+close) ⇒ <code>boolean</code>
     * [.escape(value)](#Database+escape) ⇒ <code>string</code>
@@ -181,6 +172,7 @@ module.exports = class DbUser extends DbObject {
     * [.saveCache(cacheId, value)](#Database+saveCache) ⇒ <code>void</code>
     * [.clearCache(cacheId)](#Database+clearCache) ⇒ <code>void</code>
     * [.clearAllCache()](#Database+clearAllCache) ⇒ <code>void</code>
+    * [.getCache(cacheId)](#Database+getCache) ⇒ <code>array</code>
     * [.clearConnection()](#Database+clearConnection) ⇒ <code>void</code>
     * [.getDb(args)](#Database+getDb) ⇒ <code>array</code>
 
@@ -189,84 +181,6 @@ module.exports = class DbUser extends DbObject {
 ### new Database()
 Construct database connection
 
-<a name="Database+_connection"></a>
-
-### database.\_connection : <code>Object</code>
-Connection instance of the database
-
-**Kind**: instance property of [<code>Database</code>](#Database)  
-<a name="Database+_defaultDbConnectTimeout"></a>
-
-### database.\_defaultDbConnectTimeout : <code>number</code>
-Default database connection time out in miliseconds. Default is 10 seconds.
-
-**Kind**: instance property of [<code>Database</code>](#Database)  
-<a name="Database+_defaultDbPort"></a>
-
-### database.\_defaultDbPort : <code>number</code>
-Default database port. Default is 3306.
-
-**Kind**: instance property of [<code>Database</code>](#Database)  
-<a name="Database+_lastQuery"></a>
-
-### database.\_lastQuery : <code>string</code>
-Last query recorded
-
-**Kind**: instance property of [<code>Database</code>](#Database)  
-<a name="Database+_lastResults"></a>
-
-### database.\_lastResults : <code>array</code>
-Last result set recorded
-
-**Kind**: instance property of [<code>Database</code>](#Database)  
-<a name="Database+_cache"></a>
-
-### database.\_cache : <code>Object</code>
-Holds the cache
-
-**Kind**: instance property of [<code>Database</code>](#Database)  
-<a name="Database+_dbClasses"></a>
-
-### database.\_dbClasses : <code>Object</code>
-Holds the DbObject mapping
-
-**Kind**: instance property of [<code>Database</code>](#Database)  
-<a name="Database+_dbHost"></a>
-
-### database.\_dbHost : <code>string</code>
-Database host
-
-**Kind**: instance property of [<code>Database</code>](#Database)  
-<a name="Database+_dbName"></a>
-
-### database.\_dbName : <code>string</code>
-Database name
-
-**Kind**: instance property of [<code>Database</code>](#Database)  
-<a name="Database+_dbUser"></a>
-
-### database.\_dbUser : <code>string</code>
-Database user
-
-**Kind**: instance property of [<code>Database</code>](#Database)  
-<a name="Database+_dbPassword"></a>
-
-### database.\_dbPassword : <code>string</code>
-Database password
-
-**Kind**: instance property of [<code>Database</code>](#Database)  
-<a name="Database+_dbPort"></a>
-
-### database.\_dbPort : <code>string</code>
-Database port
-
-**Kind**: instance property of [<code>Database</code>](#Database)  
-<a name="Database+_dbConnectTimeout"></a>
-
-### database.\_dbConnectTimeout : <code>number</code>
-Database connection timeout
-
-**Kind**: instance property of [<code>Database</code>](#Database)  
 <a name="Database+dbClasses"></a>
 
 ### database.dbClasses ⇒ <code>void</code>
@@ -280,7 +194,7 @@ Set dbClasses
 
 **Example**  
 ```js
-// Example for `dbClasses`
+// Example for `dbClasses` parameter
 let dbClasses = {
   'User': DbUser,
   'Job': DbJob
@@ -288,37 +202,67 @@ let dbClasses = {
 ```
 <a name="Database+dbHost"></a>
 
-### database.dbHost
-Getter methods
+### database.dbHost ⇒ <code>string</code>
+Get dbHost variable
+
+**Kind**: instance property of [<code>Database</code>](#Database)  
+<a name="Database+dbPort"></a>
+
+### database.dbPort ⇒ <code>number</code>
+Get dbPort variable
+
+**Kind**: instance property of [<code>Database</code>](#Database)  
+<a name="Database+dbConnectTimeout"></a>
+
+### database.dbConnectTimeout ⇒ <code>number</code>
+Get dbConnectTimeout variable
+
+**Kind**: instance property of [<code>Database</code>](#Database)  
+<a name="Database+dbUser"></a>
+
+### database.dbUser ⇒ <code>string</code>
+Get dbUser variable
+
+**Kind**: instance property of [<code>Database</code>](#Database)  
+<a name="Database+dbPassword"></a>
+
+### database.dbPassword ⇒ <code>string</code>
+Get dbPassword variable
+
+**Kind**: instance property of [<code>Database</code>](#Database)  
+<a name="Database+dbName"></a>
+
+### database.dbName ⇒ <code>string</code>
+Get dbName variable
 
 **Kind**: instance property of [<code>Database</code>](#Database)  
 <a name="Database+insertedId"></a>
 
-### database.insertedId
+### database.insertedId ⇒ <code>number</code>
 Get last inserted ID
 
 **Kind**: instance property of [<code>Database</code>](#Database)  
 <a name="Database+lastResults"></a>
 
-### database.lastResults
+### database.lastResults ⇒ <code>array</code>
 Get last results
 
 **Kind**: instance property of [<code>Database</code>](#Database)  
 <a name="Database+lastQuery"></a>
 
-### database.lastQuery
+### database.lastQuery ⇒ <code>string</code>
 Get last query
 
 **Kind**: instance property of [<code>Database</code>](#Database)  
 <a name="Database+affectedRows"></a>
 
-### database.affectedRows
+### database.affectedRows ⇒ <code>number</code>
 Get number of deleted rows
 
 **Kind**: instance property of [<code>Database</code>](#Database)  
 <a name="Database+changedRows"></a>
 
-### database.changedRows
+### database.changedRows ⇒ <code>number</code>
 Get number of updated rows
 
 **Kind**: instance property of [<code>Database</code>](#Database)  
@@ -505,7 +449,7 @@ Construct single or multiple INSERT queries and execute
 
 **Example**  
 ```js
-// Example for data parameter:
+// Example for `values` parameter
 {
   id: 10,
   firstName: 'John',
@@ -855,6 +799,18 @@ Clear a cache
 Clear all cache
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+<a name="Database+getCache"></a>
+
+### database.getCache(cacheId) ⇒ <code>array</code>
+Get cache by ID
+
+**Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>array</code> - Returns the cached result set  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| cacheId | <code>string</code> | The ID of the cache to get |
+
 <a name="Database+clearConnection"></a>
 
 ### database.clearConnection() ⇒ <code>void</code>
@@ -875,32 +831,356 @@ Call method(s) on multiple DbObjects at the same time
 
 **Example**  
 ```js
-// Example for `args`
-   let args = [
-   {
-     entity: 'Test',
-     method: 'get',
-     args: [
-      // querying row # 1
-      1
-     ]
-   },
-   {
-     entity: 'Test',
-     method: 'get',
-     args: [
-      // querying row # 2
-      2
-     ]
-   }
- ];
+// Example for `args` parameter
+let args = [{
+  entity: 'User',
+  method: 'get',
+  args: [
+    // querying row # 1
+    1
+  ]
+}, {
+  entity: 'User',
+  method: 'get',
+  args: [
+    // querying row # 2
+    2
+  ]
+}];
 // or
- let args = {
-     entity: 'Test',
-     method: 'get',
-     args: [
-      // querying row # 1
-      1
-     ]
-   };
+let args = {
+  entity: 'User',
+  method: 'get',
+  args: [
+    // querying row # 1
+    1
+  ]
+};
 ```
+
+
+
+<a name="DbObject"></a>
+
+### DbObject
+**Kind**: global class  
+
+* [DbObject](#DbObject)
+    * [new DbObject(db)](#new_DbObject_new)
+    * [.tableName](#DbObject+tableName) ⇒ <code>void</code>
+    * [.tableName](#DbObject+tableName) ⇒ <code>string</code>
+    * [.get(id)](#DbObject+get) ⇒ <code>array</code>
+    * [.getAll([orderBy])](#DbObject+getAll) ⇒ <code>array</code>
+    * [.getAllCount()](#DbObject+getAllCount) ⇒ <code>number</code>
+    * [.find(criteria, [limit], [orderBy])](#DbObject+find) ⇒ <code>array</code>
+    * [.findOne(criteria, [orderBy])](#DbObject+findOne) ⇒ <code>Object</code>
+    * [.findColumn(criteria, columnName, [orderBy])](#DbObject+findColumn) ⇒ <code>string</code> \| <code>number</code> \| <code>boolean</code>
+    * [.create(values)](#DbObject+create) ⇒ <code>boolean</code>
+    * [.update(id, values)](#DbObject+update) ⇒ <code>boolean</code>
+    * [.updateBy(criteria, values)](#DbObject+updateBy) ⇒ <code>boolean</code>
+    * [.delete(id)](#DbObject+delete) ⇒ <code>boolean</code>
+    * [.deleteBy(criteria)](#DbObject+deleteBy) ⇒ <code>boolean</code>
+    * [.exists(id)](#DbObject+exists) ⇒ <code>boolean</code>
+    * [.existsBy(criteria, [excludeId])](#DbObject+existsBy) ⇒ <code>boolean</code>
+    * [.updatePositionColumnById(values)](#DbObject+updatePositionColumnById) ⇒ <code>boolean</code>
+    * [.saveCache(cacheId, value)](#DbObject+saveCache) ⇒ <code>void</code>
+    * [.clearCache(cacheId)](#DbObject+clearCache) ⇒ <code>void</code>
+    * [.clearAllCache()](#DbObject+clearAllCache) ⇒ <code>void</code>
+    * [.getCache(cacheId)](#DbObject+getCache) ⇒ <code>array</code>
+    * [.escape(value)](#DbObject+escape) ⇒ <code>string</code>
+    * [.escapeId(value)](#DbObject+escapeId) ⇒ <code>string</code>
+
+<a name="new_DbObject_new"></a>
+
+### new DbObject(db)
+Construct the DbObject
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| db | <code>Objct</code> | The database object |
+
+<a name="DbObject+tableName"></a>
+
+### dbObject.tableName ⇒ <code>void</code>
+Set tableName of this object
+
+**Kind**: instance property of [<code>DbObject</code>](#DbObject)  
+**Params**: <code>string</code> tableName The table name  
+<a name="DbObject+tableName"></a>
+
+### dbObject.tableName ⇒ <code>string</code>
+Get tableName of this object
+
+**Kind**: instance property of [<code>DbObject</code>](#DbObject)  
+**Returns**: <code>string</code> - The table name  
+<a name="DbObject+get"></a>
+
+### dbObject.get(id) ⇒ <code>array</code>
+Get entity by ID
+
+**Kind**: instance method of [<code>DbObject</code>](#DbObject)  
+**Returns**: <code>array</code> - The entity array  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| id | <code>number</code> | The primary ID of entity |
+
+<a name="DbObject+getAll"></a>
+
+### dbObject.getAll([orderBy]) ⇒ <code>array</code>
+Get all entities
+
+**Kind**: instance method of [<code>DbObject</code>](#DbObject)  
+**Returns**: <code>array</code> - All the result sets as an array  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| [orderBy] | <code>string</code> | <code>null</code> | The order by string |
+
+<a name="DbObject+getAllCount"></a>
+
+### dbObject.getAllCount() ⇒ <code>number</code>
+Get all entity count
+
+**Kind**: instance method of [<code>DbObject</code>](#DbObject)  
+**Returns**: <code>number</code> - Total number of entities  
+<a name="DbObject+find"></a>
+
+### dbObject.find(criteria, [limit], [orderBy]) ⇒ <code>array</code>
+Find entities
+
+**Kind**: instance method of [<code>DbObject</code>](#DbObject)  
+**Returns**: <code>array</code> - The result array  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| criteria | <code>Object</code> |  | The criteria |
+| [limit] | <code>number</code> | <code></code> | The number of results to return, optional |
+| [orderBy] | <code>string</code> | <code>null</code> | The order by syntax, example "id DESC", optional |
+
+**Example**  
+```js
+// Example for `criteria` parameter
+ {
+   id: 10,
+   status: 'expired'
+ }
+```
+<a name="DbObject+findOne"></a>
+
+### dbObject.findOne(criteria, [orderBy]) ⇒ <code>Object</code>
+Find one entity
+
+**Kind**: instance method of [<code>DbObject</code>](#DbObject)  
+**Returns**: <code>Object</code> - The entity as object  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| criteria | <code>Object</code> |  | The criteria |
+| [orderBy] | <code>string</code> | <code>null</code> | The order by syntax, example "id DESC", optional |
+
+<a name="DbObject+findColumn"></a>
+
+### dbObject.findColumn(criteria, columnName, [orderBy]) ⇒ <code>string</code> \| <code>number</code> \| <code>boolean</code>
+Find a column from an entity
+
+**Kind**: instance method of [<code>DbObject</code>](#DbObject)  
+**Returns**: <code>string</code> \| <code>number</code> \| <code>boolean</code> - The column value  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| criteria | <code>Object</code> |  | The criteria. If multiple rows matching the criteria are found, only the first row will be used |
+| columnName | <code>string</code> |  | The column to return |
+| [orderBy] | <code>string</code> | <code>null</code> | The order by syntax, example "id DESC", optional |
+
+<a name="DbObject+create"></a>
+
+### dbObject.create(values) ⇒ <code>boolean</code>
+Create an entity
+
+**Kind**: instance method of [<code>DbObject</code>](#DbObject)  
+**Returns**: <code>boolean</code> - Returns true on successful creation  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| values | <code>array</code> \| <code>Object</code> | The data to insert as a single object or array of objects |
+
+**Example**  
+```js
+// Example for `values` parameter
+{
+  id: 10,
+  firstName: 'John',
+  lastName: 'Doe',
+  status: 'active'
+}
+// or
+[{
+  id: 10,
+  firstName: 'John',
+  lastName: 'Doe',
+  status: 'active'
+}, ... ]
+```
+<a name="DbObject+update"></a>
+
+### dbObject.update(id, values) ⇒ <code>boolean</code>
+Update an entity by ID
+
+**Kind**: instance method of [<code>DbObject</code>](#DbObject)  
+**Returns**: <code>boolean</code> - Returns true on successful update  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| id | <code>number</code> | The primary ID of the entity |
+| values | <code>Object</code> | The data to update |
+
+<a name="DbObject+updateBy"></a>
+
+### dbObject.updateBy(criteria, values) ⇒ <code>boolean</code>
+Update entity with multiple matching criteria
+
+**Kind**: instance method of [<code>DbObject</code>](#DbObject)  
+**Returns**: <code>boolean</code> - Returns true on successful update  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| criteria | <code>Object</code> | The criteria used to match the record |
+| values | <code>Object</code> | The data to update |
+
+<a name="DbObject+delete"></a>
+
+### dbObject.delete(id) ⇒ <code>boolean</code>
+Delete an entity by ID
+
+**Kind**: instance method of [<code>DbObject</code>](#DbObject)  
+**Returns**: <code>boolean</code> - Returns true on successful deletion  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| id | <code>number</code> | The primary ID of the record |
+
+<a name="DbObject+deleteBy"></a>
+
+### dbObject.deleteBy(criteria) ⇒ <code>boolean</code>
+Delete entity with multiple matching criteria
+
+**Kind**: instance method of [<code>DbObject</code>](#DbObject)  
+**Returns**: <code>boolean</code> - Returns true on successful delete  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| criteria | <code>Object</code> | The criteria used to match the record |
+
+<a name="DbObject+exists"></a>
+
+### dbObject.exists(id) ⇒ <code>boolean</code>
+Does entity ID exist?
+
+**Kind**: instance method of [<code>DbObject</code>](#DbObject)  
+**Returns**: <code>boolean</code> - Returns true if record exists  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| id | <code>number</code> | The primary ID of the record |
+
+<a name="DbObject+existsBy"></a>
+
+### dbObject.existsBy(criteria, [excludeId]) ⇒ <code>boolean</code>
+Does entity exists matching multiple criteria
+
+**Kind**: instance method of [<code>DbObject</code>](#DbObject)  
+**Returns**: <code>boolean</code> - Returns true if record exists  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| criteria | <code>Object</code> |  | The criteria used to match the record |
+| [excludeId] | <code>number</code> | <code></code> | The ID to exclude |
+
+<a name="DbObject+updatePositionColumnById"></a>
+
+### dbObject.updatePositionColumnById(values) ⇒ <code>boolean</code>
+Update entities' position column
+
+**Kind**: instance method of [<code>DbObject</code>](#DbObject)  
+**Returns**: <code>boolean</code> - Returns true on successful update  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| values | <code>Object</code> | The position values to update |
+
+**Example**  
+```js
+// Example for `values` parameter
+{
+  100: 5, // entity #100 gets a new `position` value of 5
+  101: 6,
+  102: 7,
+  103: 8
+}
+```
+<a name="DbObject+saveCache"></a>
+
+### dbObject.saveCache(cacheId, value) ⇒ <code>void</code>
+Save cache
+
+**Kind**: instance method of [<code>DbObject</code>](#DbObject)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| cacheId | <code>string</code> | The cache ID |
+| value | <code>string</code> | The value to cache |
+
+<a name="DbObject+clearCache"></a>
+
+### dbObject.clearCache(cacheId) ⇒ <code>void</code>
+Clear cache
+
+**Kind**: instance method of [<code>DbObject</code>](#DbObject)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| cacheId | <code>string</code> | The ID of the cache to clear |
+
+<a name="DbObject+clearAllCache"></a>
+
+### dbObject.clearAllCache() ⇒ <code>void</code>
+Clear all cache
+
+**Kind**: instance method of [<code>DbObject</code>](#DbObject)  
+<a name="DbObject+getCache"></a>
+
+### dbObject.getCache(cacheId) ⇒ <code>array</code>
+Get cache by ID
+
+**Kind**: instance method of [<code>DbObject</code>](#DbObject)  
+**Returns**: <code>array</code> - Returns the cached result set  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| cacheId | <code>string</code> | The ID of the cache to get |
+
+<a name="DbObject+escape"></a>
+
+### dbObject.escape(value) ⇒ <code>string</code>
+Escape string value
+
+**Kind**: instance method of [<code>DbObject</code>](#DbObject)  
+**Returns**: <code>string</code> - Escaped value  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| value | <code>string</code> | Value to escape |
+
+<a name="DbObject+escapeId"></a>
+
+### dbObject.escapeId(value) ⇒ <code>string</code>
+Escape identifier(database/table/column name)
+
+**Kind**: instance method of [<code>DbObject</code>](#DbObject)  
+**Returns**: <code>string</code> - Escaped value  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| value | <code>string</code> | Value to escape |
