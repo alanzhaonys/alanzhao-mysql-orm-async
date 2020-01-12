@@ -1,29 +1,94 @@
-const mysql = require('mysql2/promise');
+//const mysql = require('mysql2/promise');
 
 /**
  * A database wrapper for npm 'mysql2' package
  * @author Alan Zhao <azhao6060@gmail.com>
  */
-module.exports = class Database {
+//module.exports =
+  class Database {
   /**
    * Construct database connection
    * @constructor
    */
   constructor(configs) {
+
+    /**
+     * Connection instance of the database
+     * @type {Object}
+     */
     this._connection = null;
+
+    /**
+     * Default database connection time out in miliseconds. Default is 10 seconds.
+     * @type {number}
+     */
     this._defaultDbConnectTimeout = 10000;
+
+    /**
+     * Default database port. Default is 3306.
+     * @type {number}
+     */
     this._defaultDbPort = 3306;
+
+    /**
+     * Last query recorded
+     * @type {string}
+     */
     this._lastQuery = null;
+
+    /**
+     * Last result set recorded
+     * @type {array}
+     */
     this._lastResults = null;
+
+    /**
+     * Holds the cache
+     * @type {Object}
+     */
     this._cache = {};
+
+    /**
+     * Holds the DbObject mapping
+     * @type {Object}
+     */
     this._dbClasses = {};
 
+    /**
+     * Database host
+     * @type {string}
+     */
     this._dbHost = configs.dbHost;
+
+    /**
+     * Database name
+     * @type {string}
+     */
     this._dbName = configs.dbName;
+
+    /**
+     * Database user
+     * @type {string}
+     */
     this._dbUser = configs.dbUser;
+
+    /**
+     * Database password
+     * @type {string}
+     */
     this._dbPassword = configs.dbPassword;
+
+    /**
+     * Database port
+     * @type {string}
+     */
     this._dbPort = configs.dbPort ?
       configs.dbPort : this._defaultDbPort;
+
+    /**
+     * Database connection timeout
+     * @type {number}
+     */
     this._dbConnectTimeout = configs.dbConnectTimeout ?
       configs.dbConnectTimeout : this._defaultDbConnectTimeout;
   }
@@ -141,7 +206,7 @@ module.exports = class Database {
    * var query = "SELECT * FROM users WHERE id = 10";
    * await db.query(query);
    * @param {string} query Query to execute
-   * @param {array} values The values of the query, optional
+   * @param {array} [values=[]] The values of the query, optional
    * @returns {array} Results of query
    */
   async query(query, values = []) {
@@ -187,13 +252,13 @@ module.exports = class Database {
   /**
    * Construct a SELECT query and execute it
    * @param {string} table The table name
-   * @param {array} criteria The criteria as an array, example:
+   * @param {Object} criteria The criteria, example:
    *   {
    *     id: 10,
    *     status: 'expired'
    *   }
-   * @param {number} limit The number of results to return, optional
-   * @param {string} orderBy The order by syntax, example "id DESC", optional
+   * @param {number} [limit=null] The number of results to return, optional
+   * @param {string} [orderBy=null] The order by syntax, example "id DESC", optional
    * @returns {array} The result array
    */
   async getBy(table, criteria, limit = null, orderBy = null) {
@@ -229,8 +294,8 @@ module.exports = class Database {
   /**
    * Construct single or multiple INSERT queries and execute
    * @param {string} table The table name
-   * @param {array|Object} data The data to insert as a single object or array of objects
-   * @example:
+   * @param {array|Object} values The data to insert as a single object or array of objects
+   * @example
    * // Example for data parameter:
    * {
    *   id: 10,
@@ -247,26 +312,26 @@ module.exports = class Database {
    * }, ... ]
    * @returns {boolean} Returns true on successful insertion
    */
-  async insert(table, data) {
-    if (!Array.isArray(data)) {
-      data = [data];
+  async insert(table, values) {
+    if (!Array.isArray(values)) {
+      values = [values];
     }
 
     var queries = [];
 
-    for (let i = 0; i < data.length; i++) {
-      let thisData = data[i];
+    for (let i = 0; i < values.length; i++) {
+      let thisValue = values[i];
       let keys = [];
-      let values = [];
+      let insertValues = [];
 
-      for (var key in thisData) {
-        let value = thisData[key];
+      for (var key in thisValue) {
+        let value = thisValue[key];
         keys.push(this.escapeId(key));
         if (typeof value === 'string' &&
           value.match('ENCRYPT\((.+)\)')) {
-          values.push(value);
+          insertValues.push(value);
         } else {
-          values.push(this.escape(value));
+          insertValues.push(this.escape(value));
         }
       }
 
@@ -276,7 +341,7 @@ module.exports = class Database {
         ' (' +
         keys.join(', ') +
         ') VALUES (' +
-        values.join(', ') +
+        insertValues.join(', ') +
         ')'
       );
     }
@@ -285,7 +350,11 @@ module.exports = class Database {
   }
 
   /**
-   * Construct an UPDATE by ID query
+   * Construct an UPDATE by ID query and execute
+   * @param {string} table The table name
+   * @param {number} id The primary ID of the record
+   * @param {Object} values The data to update
+   * @returns {boolean} Returns true on successful update
    */
   async update(table, id, values) {
     return await this.updateBy(table, {
@@ -294,7 +363,11 @@ module.exports = class Database {
   }
 
   /**
-   * Construct an update by criteria query
+   * Construct an update by criteria query and execute
+   * @param {string} table The table name
+   * @param {Object} criteria The criteria used to match the record
+   * @param {Object} values The data to update
+   * @returns {boolean} Returns true on successful update
    */
   async updateBy(table, criteria, values) {
     var where = [];
@@ -327,7 +400,10 @@ module.exports = class Database {
   }
 
   /**
-   * Construct delete by ID query
+   * Construct delete by ID query and execute
+   * @param {string} table The table name
+   * @param {number} id The primary ID of the record
+   * @returns {boolean} Returns true on successful deletion
    */
   async delete(table, id) {
     return await this.deleteBy(table, {
@@ -336,7 +412,10 @@ module.exports = class Database {
   }
 
   /**
-   * Construct delete by criteria query
+   * Construct delete by criteria query and execute
+   * @param {string} table The table name
+   * @param {Object} criteria The criteria used to match the record
+   * @returns {boolean} Returns true on successful delete
    */
   async deleteBy(table, criteria) {
     var where = [];
@@ -357,7 +436,10 @@ module.exports = class Database {
   }
 
   /**
-   * If a record exists by ID
+   * Check if a record exists by the ID
+   * @param {string} table The table name
+   * @param {number} id The primary ID of the record
+   * @returns {boolean} Returns true if record exists
    */
   async exists(table, id) {
     return await this.existsBy(table, {
@@ -366,7 +448,11 @@ module.exports = class Database {
   }
 
   /**
-   * Whether or not a record exists by matching critera
+   * Check if a record matching the criteria exists
+   * @param {string} table The table name
+   * @param {Object} criteria The criteria used to match the record
+   * @param {number} [excludeId=null] The ID to exclude
+   * @returns {boolean} Returns true if record exists
    */
   async existsBy(table, criteria, excludeId = null) {
     var where = [];
@@ -394,16 +480,19 @@ module.exports = class Database {
   }
 
   /**
-   * Return result as array
+   * Execute a query and return column result as array
+   * @param {string} query The query to execute
+   * @param {string} [column=null] The column of the result set. If not provided, first column will be used
+   * @returns {array} Returns the result as array
    */
-  async array(query, key = null) {
+  async array(query, column = null) {
     var array = [];
     const results = await this.query(query);
 
     for (let i = 0; i < results.length; i++) {
       let result = results[i];
-      if (key) {
-        array.push(result[key]);
+      if (column) {
+        array.push(result[column]);
       } else {
         array.push(result[Object.keys(result)[0]]);
       }
@@ -413,7 +502,11 @@ module.exports = class Database {
   }
 
   /**
-   * Return results with custom key and values
+   * Return results as custom key and value pair object
+   * @param {string} query The query to execute
+   * @param {string} key The column of the result to use as key of the object
+   * @param {string} value The column of the result to use as value of the object
+   * @returns {Object} Returns the result as object
    */
   async kvObject(query, key, value) {
     var object = {};
@@ -429,6 +522,8 @@ module.exports = class Database {
 
   /**
    * Return first row of the result set
+   * @param {string} query The query to execute
+   * @returns {array} Returns the result as array
    */
   async row(query) {
     const results = await this.query(query);
@@ -442,6 +537,8 @@ module.exports = class Database {
 
   /**
    * Return scalar value
+   * @param {string} query The query to execute
+   * @returns {string|number|boolean|decimal} Returns the result as scalar
    */
   async scalar(query) {
     const results = await this.query(query);
@@ -457,6 +554,8 @@ module.exports = class Database {
 
   /**
    * Return boolean value
+   * @param {string} query The query to execute
+   * @returns {boolean} Returns the result as boolean
    */
   async bool(query) {
     const value = await this.scalar(query);
@@ -478,6 +577,8 @@ module.exports = class Database {
 
   /**
    * Return integer value
+   * @param {string} query The query to execute
+   * @returns {number} Returns the result as integer
    */
   async integer(query) {
     const value = await this.scalar(query);
@@ -486,6 +587,9 @@ module.exports = class Database {
 
   /**
    * Return decimal value
+   * @param {string} query The query to execute
+   * @param {number} [decimal=2] The number of decimal places
+   * @returns {number} Returns the result as decimal
    */
   async decimal(query, decimal = 2) {
     const value = await this.scalar(query);
@@ -495,6 +599,8 @@ module.exports = class Database {
 
   /**
    * Whether or not a table exists
+   * @param {string} The table name
+   * @returns {boolean} Returns true if table exists
    */
   async tableExists(table) {
     const query = 'SHOW TABLES LIKE "' + table + '"';
@@ -503,6 +609,8 @@ module.exports = class Database {
 
   /**
    * Run queries in transaction
+   * @param {array} queries An array of queries to run in transaction
+   * @returns {boolean} Returns true if transaction is successful
    */
   async transaction(queries) {
     await this._connection.beginTransaction();
@@ -514,11 +622,15 @@ module.exports = class Database {
     } catch (error) {
       this._connection.rollback();
     }
+
     return true;
   }
 
   /**
-   * Duplicate a table
+   * Duplicate content to a new table
+   * @param {string} from The table to copy from
+   * @param {string} to The table to copy to
+   * @returns {boolean} Returns true if duplication is successful
    */
   async duplicateTable(from, to) {
     var fromTable = this.escapeId(from);
@@ -537,7 +649,9 @@ module.exports = class Database {
   }
 
   /**
-   * Truncate a table, useful for testing
+   * Truncate a table
+   * @param {string} table The table to truncate
+   * @returns {boolean} Returns true if table is truncated
    */
   async truncate(table) {
     const query = 'TRUNCATE TABLE ' + this.escapeId(table);
@@ -545,7 +659,9 @@ module.exports = class Database {
   }
 
   /**
-   * Drop a table, useful for testing
+   * Drop a table
+   * @param {string} table The table to drop
+   * @returns {boolean} Returns true if table is dropped
    */
   async drop(table) {
     const query = 'DROP TABLE ' + this.escapeId(table);
@@ -555,6 +671,9 @@ module.exports = class Database {
 
   /**
    * Set an environment variable
+   * @param {string} name Name of the environment variable
+   * @param {string} value Value of the environment variable
+   * @returns {boolean} Returns true if table is truncated
    */
   async setEnvVar(name, value) {
     const query = 'SET @' + name + ' = ' + this.escape(value);
@@ -563,6 +682,8 @@ module.exports = class Database {
 
   /**
    * Get an environment variable
+   * @param {string} name Name of the environment variable to get
+   * @returns {array} Returns true if table is truncated
    */
   async getEnvVar(name) {
     const query = 'SELECT @' + name;
@@ -571,6 +692,9 @@ module.exports = class Database {
 
   /**
    * Get table columns
+   * @param {string} name Name of the table
+   * @param {string} [ignoreColumns=null] Columns to ignore
+   * @returns {array} Returns names of the table as array
    */
   async getTableColumns(table, ignoreColumns = []) {
     var cacheId = 'table-columns-for-' + table;
@@ -598,6 +722,9 @@ module.exports = class Database {
 
   /**
    * Get column default values
+   * @param {string} name Name of the table
+   * @param {string} [ignoreColumns=null] Columns to ignore
+   * @returns {Object} Returns an object with column names and their default values
    */
   async getTableColumnDefaultValues(table, ignoreColumns = []) {
     var cacheId = 'table-column-default-values-for-' + table;
@@ -646,6 +773,9 @@ module.exports = class Database {
 
   /**
    * Get column data types
+   * @param {string} name Name of the table
+   * @param {string} [ignoreColumns=null] Columns to ignore
+   * @returns {Object} Returns an object with column names and their data types
    */
   async getTableColumnDataTypes(table, ignoreColumns = []) {
     var cacheId = 'table-column-data-types-for-' + table;
@@ -689,21 +819,28 @@ module.exports = class Database {
 
   /**
    * Export results
+   * @param {array} results Results to export
+   * @returns {array} Returns cleaned up results
    */
   export (results) {
     // JSON manipulation to remove unwanted mysql methods
-    return !results ? null : JSON.parse(JSON.stringify(results));
+    return results ? JSON.parse(JSON.stringify(results)) : null;
   }
 
   /**
-   * Save cache
+   * Save value to cache
+   * @param {string} cacheId The cache ID
+   * @param {string} value The value to cache
+   * @returns {void}
    */
   saveCache(cacheId, value) {
     this._cache[cacheId] = value;
   }
 
   /**
-   * Clear cache
+   * Clear a cache
+   * @param {string} cacheId The ID of the cache to clear
+   * @returns {void}
    */
   clearCache(cacheId) {
     delete this._cache[cacheId];
@@ -711,6 +848,7 @@ module.exports = class Database {
 
   /**
    * Clear all cache
+   * @returns {void}
    */
   clearAllCache() {
     this._cache = {};
@@ -718,6 +856,7 @@ module.exports = class Database {
 
   /**
    * Clear connection
+   * @returns {void}
    */
   clearConnection() {
     this._connection = null;
@@ -725,6 +864,37 @@ module.exports = class Database {
 
   /**
    * Call method(s) on multiple DbObjects at the same time
+   * @param {array|Object} args The arguments
+   * @example
+   * // Example for `args`
+   *    let args = [
+   *    {
+   *      entity: 'Test',
+   *      method: 'get',
+   *      args: [
+   *       // querying row # 1
+   *       1
+   *      ]
+   *    },
+   *    {
+   *      entity: 'Test',
+   *      method: 'get',
+   *      args: [
+   *       // querying row # 2
+   *       2
+   *      ]
+   *    }
+   *  ];
+   * // or
+   *  let args = {
+   *      entity: 'Test',
+   *      method: 'get',
+   *      args: [
+   *       // querying row # 1
+   *       1
+   *      ]
+   *    };
+   * @returns {array} Returns an array of results
    */
   async getDb(args) {
     var self = this;
@@ -760,6 +930,14 @@ module.exports = class Database {
 
   /**
    * Set dbClasses
+   * @param {array} dbClasses The DbObject mapping to set
+   * @example
+   * // Example for `dbClasses`
+   * let dbClasses = {
+   *   'User': DbUser,
+   *   'Job': DbJob
+   * };
+   * @returns {void}
    */
   set dbClasses(dbClasses) {
     this._dbClasses = dbClasses;

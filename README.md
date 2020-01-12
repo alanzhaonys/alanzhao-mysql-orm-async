@@ -118,13 +118,24 @@ module.exports = class DbUser extends DbObject {
 <a name="Database"></a>
 
 ## Database
-A database wrapper for npm 'mysql2' package
-
 **Kind**: global class  
 
 * [Database](#Database)
     * [new Database()](#new_Database_new)
-    * [.dbClasses](#Database+dbClasses)
+    * [._connection](#Database+_connection) : <code>Object</code>
+    * [._defaultDbConnectTimeout](#Database+_defaultDbConnectTimeout) : <code>number</code>
+    * [._defaultDbPort](#Database+_defaultDbPort) : <code>number</code>
+    * [._lastQuery](#Database+_lastQuery) : <code>string</code>
+    * [._lastResults](#Database+_lastResults) : <code>array</code>
+    * [._cache](#Database+_cache) : <code>Object</code>
+    * [._dbClasses](#Database+_dbClasses) : <code>Object</code>
+    * [._dbHost](#Database+_dbHost) : <code>string</code>
+    * [._dbName](#Database+_dbName) : <code>string</code>
+    * [._dbUser](#Database+_dbUser) : <code>string</code>
+    * [._dbPassword](#Database+_dbPassword) : <code>string</code>
+    * [._dbPort](#Database+_dbPort) : <code>string</code>
+    * [._dbConnectTimeout](#Database+_dbConnectTimeout) : <code>number</code>
+    * [.dbClasses](#Database+dbClasses) ⇒ <code>void</code>
     * [.dbHost](#Database+dbHost)
     * [.insertedId](#Database+insertedId)
     * [.lastResults](#Database+lastResults)
@@ -137,53 +148,144 @@ A database wrapper for npm 'mysql2' package
     * [.escapeId(value)](#Database+escapeId) ⇒ <code>string</code>
     * [.format(query, values)](#Database+format) ⇒ <code>string</code>
     * [.execute(query, values)](#Database+execute) ⇒ <code>array</code>
-    * [.query(query, values)](#Database+query) ⇒ <code>array</code>
+    * [.query(query, [values])](#Database+query) ⇒ <code>array</code>
     * [.get(table, id)](#Database+get) ⇒ <code>Object</code>
     * [.getAll(table, orderBy)](#Database+getAll) ⇒ <code>array</code>
     * [.getAllCount(table)](#Database+getAllCount) ⇒ <code>integer</code>
-    * [.getBy(table, criteria, limit, orderBy)](#Database+getBy) ⇒ <code>array</code>
-    * [.insert(table, data)](#Database+insert) ⇒ <code>boolean</code>
-    * [.update()](#Database+update)
-    * [.updateBy()](#Database+updateBy)
-    * [.delete()](#Database+delete)
-    * [.deleteBy()](#Database+deleteBy)
-    * [.exists()](#Database+exists)
-    * [.existsBy()](#Database+existsBy)
-    * [.array()](#Database+array)
-    * [.kvObject()](#Database+kvObject)
-    * [.row()](#Database+row)
-    * [.scalar()](#Database+scalar)
-    * [.bool()](#Database+bool)
-    * [.integer()](#Database+integer)
-    * [.decimal()](#Database+decimal)
-    * [.tableExists()](#Database+tableExists)
-    * [.transaction()](#Database+transaction)
-    * [.duplicateTable()](#Database+duplicateTable)
-    * [.truncate()](#Database+truncate)
-    * [.drop()](#Database+drop)
-    * [.setEnvVar()](#Database+setEnvVar)
-    * [.getEnvVar()](#Database+getEnvVar)
-    * [.getTableColumns()](#Database+getTableColumns)
-    * [.getTableColumnDefaultValues()](#Database+getTableColumnDefaultValues)
-    * [.getTableColumnDataTypes()](#Database+getTableColumnDataTypes)
-    * [.export()](#Database+export)
-    * [.saveCache()](#Database+saveCache)
-    * [.clearCache()](#Database+clearCache)
-    * [.clearAllCache()](#Database+clearAllCache)
-    * [.clearConnection()](#Database+clearConnection)
-    * [.getDb()](#Database+getDb)
+    * [.getBy(table, criteria, [limit], [orderBy])](#Database+getBy) ⇒ <code>array</code>
+    * [.insert(table, values)](#Database+insert) ⇒ <code>boolean</code>
+    * [.update(table, id, values)](#Database+update) ⇒ <code>boolean</code>
+    * [.updateBy(table, criteria, values)](#Database+updateBy) ⇒ <code>boolean</code>
+    * [.delete(table, id)](#Database+delete) ⇒ <code>boolean</code>
+    * [.deleteBy(table, criteria)](#Database+deleteBy) ⇒ <code>boolean</code>
+    * [.exists(table, id)](#Database+exists) ⇒ <code>boolean</code>
+    * [.existsBy(table, criteria, [excludeId])](#Database+existsBy) ⇒ <code>boolean</code>
+    * [.array(query, [column])](#Database+array) ⇒ <code>array</code>
+    * [.kvObject(query, key, value)](#Database+kvObject) ⇒ <code>Object</code>
+    * [.row(query)](#Database+row) ⇒ <code>array</code>
+    * [.scalar(query)](#Database+scalar) ⇒ <code>string</code> \| <code>number</code> \| <code>boolean</code> \| <code>decimal</code>
+    * [.bool(query)](#Database+bool) ⇒ <code>boolean</code>
+    * [.integer(query)](#Database+integer) ⇒ <code>number</code>
+    * [.decimal(query, [decimal])](#Database+decimal) ⇒ <code>number</code>
+    * [.tableExists(The)](#Database+tableExists) ⇒ <code>boolean</code>
+    * [.transaction(queries)](#Database+transaction) ⇒ <code>boolean</code>
+    * [.duplicateTable(from, to)](#Database+duplicateTable) ⇒ <code>boolean</code>
+    * [.truncate(table)](#Database+truncate) ⇒ <code>boolean</code>
+    * [.drop(table)](#Database+drop) ⇒ <code>boolean</code>
+    * [.setEnvVar(name, value)](#Database+setEnvVar) ⇒ <code>boolean</code>
+    * [.getEnvVar(name)](#Database+getEnvVar) ⇒ <code>array</code>
+    * [.getTableColumns(name, [ignoreColumns])](#Database+getTableColumns) ⇒ <code>array</code>
+    * [.getTableColumnDefaultValues(name, [ignoreColumns])](#Database+getTableColumnDefaultValues) ⇒ <code>Object</code>
+    * [.getTableColumnDataTypes(name, [ignoreColumns])](#Database+getTableColumnDataTypes) ⇒ <code>Object</code>
+    * [.export(results)](#Database+export) ⇒ <code>array</code>
+    * [.saveCache(cacheId, value)](#Database+saveCache) ⇒ <code>void</code>
+    * [.clearCache(cacheId)](#Database+clearCache) ⇒ <code>void</code>
+    * [.clearAllCache()](#Database+clearAllCache) ⇒ <code>void</code>
+    * [.clearConnection()](#Database+clearConnection) ⇒ <code>void</code>
+    * [.getDb(args)](#Database+getDb) ⇒ <code>array</code>
 
 <a name="new_Database_new"></a>
 
 ### new Database()
 Construct database connection
 
+<a name="Database+_connection"></a>
+
+### database.\_connection : <code>Object</code>
+Connection instance of the database
+
+**Kind**: instance property of [<code>Database</code>](#Database)  
+<a name="Database+_defaultDbConnectTimeout"></a>
+
+### database.\_defaultDbConnectTimeout : <code>number</code>
+Default database connection time out in miliseconds. Default is 10 seconds.
+
+**Kind**: instance property of [<code>Database</code>](#Database)  
+<a name="Database+_defaultDbPort"></a>
+
+### database.\_defaultDbPort : <code>number</code>
+Default database port. Default is 3306.
+
+**Kind**: instance property of [<code>Database</code>](#Database)  
+<a name="Database+_lastQuery"></a>
+
+### database.\_lastQuery : <code>string</code>
+Last query recorded
+
+**Kind**: instance property of [<code>Database</code>](#Database)  
+<a name="Database+_lastResults"></a>
+
+### database.\_lastResults : <code>array</code>
+Last result set recorded
+
+**Kind**: instance property of [<code>Database</code>](#Database)  
+<a name="Database+_cache"></a>
+
+### database.\_cache : <code>Object</code>
+Holds the cache
+
+**Kind**: instance property of [<code>Database</code>](#Database)  
+<a name="Database+_dbClasses"></a>
+
+### database.\_dbClasses : <code>Object</code>
+Holds the DbObject mapping
+
+**Kind**: instance property of [<code>Database</code>](#Database)  
+<a name="Database+_dbHost"></a>
+
+### database.\_dbHost : <code>string</code>
+Database host
+
+**Kind**: instance property of [<code>Database</code>](#Database)  
+<a name="Database+_dbName"></a>
+
+### database.\_dbName : <code>string</code>
+Database name
+
+**Kind**: instance property of [<code>Database</code>](#Database)  
+<a name="Database+_dbUser"></a>
+
+### database.\_dbUser : <code>string</code>
+Database user
+
+**Kind**: instance property of [<code>Database</code>](#Database)  
+<a name="Database+_dbPassword"></a>
+
+### database.\_dbPassword : <code>string</code>
+Database password
+
+**Kind**: instance property of [<code>Database</code>](#Database)  
+<a name="Database+_dbPort"></a>
+
+### database.\_dbPort : <code>string</code>
+Database port
+
+**Kind**: instance property of [<code>Database</code>](#Database)  
+<a name="Database+_dbConnectTimeout"></a>
+
+### database.\_dbConnectTimeout : <code>number</code>
+Database connection timeout
+
+**Kind**: instance property of [<code>Database</code>](#Database)  
 <a name="Database+dbClasses"></a>
 
-### database.dbClasses
+### database.dbClasses ⇒ <code>void</code>
 Set dbClasses
 
 **Kind**: instance property of [<code>Database</code>](#Database)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| dbClasses | <code>array</code> | The DbObject mapping to set |
+
+**Example**  
+```js
+// Example for `dbClasses`
+let dbClasses = {
+  'User': DbUser,
+  'Job': DbJob
+};
+```
 <a name="Database+dbHost"></a>
 
 ### database.dbHost
@@ -315,16 +417,16 @@ await db.execute(query, values);
 ```
 <a name="Database+query"></a>
 
-### database.query(query, values) ⇒ <code>array</code>
+### database.query(query, [values]) ⇒ <code>array</code>
 Run a query
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
 **Returns**: <code>array</code> - Results of query  
 
-| Param | Type | Description |
-| --- | --- | --- |
-| query | <code>string</code> | Query to execute |
-| values | <code>array</code> | The values of the query, optional |
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| query | <code>string</code> |  | Query to execute |
+| [values] | <code>array</code> | <code>[]</code> | The values of the query, optional |
 
 **Example**  
 ```js
@@ -375,7 +477,7 @@ Get all record count of a table
 
 <a name="Database+getBy"></a>
 
-### database.getBy(table, criteria, limit, orderBy) ⇒ <code>array</code>
+### database.getBy(table, criteria, [limit], [orderBy]) ⇒ <code>array</code>
 Construct a SELECT query and execute it
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
@@ -384,18 +486,26 @@ Construct a SELECT query and execute it
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | table | <code>string</code> |  | The table name |
-| criteria | <code>array</code> |  | The criteria as an array, example:   {     id: 10,     status: 'expired'   } |
-| limit | <code>number</code> | <code></code> | The number of results to return, optional |
-| orderBy | <code>string</code> | <code>null</code> | The order by syntax, example "id DESC", optional |
+| criteria | <code>Object</code> |  | The criteria, example:   {     id: 10,     status: 'expired'   } |
+| [limit] | <code>number</code> | <code></code> | The number of results to return, optional |
+| [orderBy] | <code>string</code> | <code>null</code> | The order by syntax, example "id DESC", optional |
 
 <a name="Database+insert"></a>
 
-### database.insert(table, data) ⇒ <code>boolean</code>
+### database.insert(table, values) ⇒ <code>boolean</code>
 Construct single or multiple INSERT queries and execute
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
 **Returns**: <code>boolean</code> - Returns true on successful insertion  
-**Example:**: // Example for data parameter:
+
+| Param | Type | Description |
+| --- | --- | --- |
+| table | <code>string</code> | The table name |
+| values | <code>array</code> \| <code>Object</code> | The data to insert as a single object or array of objects |
+
+**Example**  
+```js
+// Example for data parameter:
 {
   id: 10,
   firstName: 'John',
@@ -408,184 +518,389 @@ Construct single or multiple INSERT queries and execute
   firstName: 'John',
   lastName: 'Doe',
   status: 'active'
-}, ... ]  
+}, ... ]
+```
+<a name="Database+update"></a>
+
+### database.update(table, id, values) ⇒ <code>boolean</code>
+Construct an UPDATE by ID query and execute
+
+**Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>boolean</code> - Returns true on successful update  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | table | <code>string</code> | The table name |
-| data | <code>array</code> \| <code>Object</code> | The data to insert as a single object or array of objects |
+| id | <code>number</code> | The primary ID of the record |
+| values | <code>Object</code> | The data to update |
 
-<a name="Database+update"></a>
-
-### database.update()
-Construct an UPDATE by ID query
-
-**Kind**: instance method of [<code>Database</code>](#Database)  
 <a name="Database+updateBy"></a>
 
-### database.updateBy()
-Construct an update by criteria query
+### database.updateBy(table, criteria, values) ⇒ <code>boolean</code>
+Construct an update by criteria query and execute
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>boolean</code> - Returns true on successful update  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| table | <code>string</code> | The table name |
+| criteria | <code>Object</code> | The criteria used to match the record |
+| values | <code>Object</code> | The data to update |
+
 <a name="Database+delete"></a>
 
-### database.delete()
-Construct delete by ID query
+### database.delete(table, id) ⇒ <code>boolean</code>
+Construct delete by ID query and execute
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>boolean</code> - Returns true on successful deletion  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| table | <code>string</code> | The table name |
+| id | <code>number</code> | The primary ID of the record |
+
 <a name="Database+deleteBy"></a>
 
-### database.deleteBy()
-Construct delete by criteria query
+### database.deleteBy(table, criteria) ⇒ <code>boolean</code>
+Construct delete by criteria query and execute
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>boolean</code> - Returns true on successful delete  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| table | <code>string</code> | The table name |
+| criteria | <code>Object</code> | The criteria used to match the record |
+
 <a name="Database+exists"></a>
 
-### database.exists()
-If a record exists by ID
+### database.exists(table, id) ⇒ <code>boolean</code>
+Check if a record exists by the ID
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>boolean</code> - Returns true if record exists  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| table | <code>string</code> | The table name |
+| id | <code>number</code> | The primary ID of the record |
+
 <a name="Database+existsBy"></a>
 
-### database.existsBy()
-Whether or not a record exists by matching critera
+### database.existsBy(table, criteria, [excludeId]) ⇒ <code>boolean</code>
+Check if a record matching the criteria exists
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>boolean</code> - Returns true if record exists  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| table | <code>string</code> |  | The table name |
+| criteria | <code>Object</code> |  | The criteria used to match the record |
+| [excludeId] | <code>number</code> | <code></code> | The ID to exclude |
+
 <a name="Database+array"></a>
 
-### database.array()
-Return result as array
+### database.array(query, [column]) ⇒ <code>array</code>
+Execute a query and return column result as array
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>array</code> - Returns the result as array  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| query | <code>string</code> |  | The query to execute |
+| [column] | <code>string</code> | <code>null</code> | The column of the result set. If not provided, first column will be used |
+
 <a name="Database+kvObject"></a>
 
-### database.kvObject()
-Return results with custom key and values
+### database.kvObject(query, key, value) ⇒ <code>Object</code>
+Return results as custom key and value pair object
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>Object</code> - Returns the result as object  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| query | <code>string</code> | The query to execute |
+| key | <code>string</code> | The column of the result to use as key of the object |
+| value | <code>string</code> | The column of the result to use as value of the object |
+
 <a name="Database+row"></a>
 
-### database.row()
+### database.row(query) ⇒ <code>array</code>
 Return first row of the result set
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>array</code> - Returns the result as array  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| query | <code>string</code> | The query to execute |
+
 <a name="Database+scalar"></a>
 
-### database.scalar()
+### database.scalar(query) ⇒ <code>string</code> \| <code>number</code> \| <code>boolean</code> \| <code>decimal</code>
 Return scalar value
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>string</code> \| <code>number</code> \| <code>boolean</code> \| <code>decimal</code> - Returns the result as scalar  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| query | <code>string</code> | The query to execute |
+
 <a name="Database+bool"></a>
 
-### database.bool()
+### database.bool(query) ⇒ <code>boolean</code>
 Return boolean value
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>boolean</code> - Returns the result as boolean  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| query | <code>string</code> | The query to execute |
+
 <a name="Database+integer"></a>
 
-### database.integer()
+### database.integer(query) ⇒ <code>number</code>
 Return integer value
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>number</code> - Returns the result as integer  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| query | <code>string</code> | The query to execute |
+
 <a name="Database+decimal"></a>
 
-### database.decimal()
+### database.decimal(query, [decimal]) ⇒ <code>number</code>
 Return decimal value
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>number</code> - Returns the result as decimal  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| query | <code>string</code> |  | The query to execute |
+| [decimal] | <code>number</code> | <code>2</code> | The number of decimal places |
+
 <a name="Database+tableExists"></a>
 
-### database.tableExists()
+### database.tableExists(The) ⇒ <code>boolean</code>
 Whether or not a table exists
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>boolean</code> - Returns true if table exists  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| The | <code>string</code> | table name |
+
 <a name="Database+transaction"></a>
 
-### database.transaction()
+### database.transaction(queries) ⇒ <code>boolean</code>
 Run queries in transaction
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>boolean</code> - Returns true if transaction is successful  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| queries | <code>array</code> | An array of queries to run in transaction |
+
 <a name="Database+duplicateTable"></a>
 
-### database.duplicateTable()
-Duplicate a table
+### database.duplicateTable(from, to) ⇒ <code>boolean</code>
+Duplicate content to a new table
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>boolean</code> - Returns true if duplication is successful  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| from | <code>string</code> | The table to copy from |
+| to | <code>string</code> | The table to copy to |
+
 <a name="Database+truncate"></a>
 
-### database.truncate()
-Truncate a table, useful for testing
+### database.truncate(table) ⇒ <code>boolean</code>
+Truncate a table
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>boolean</code> - Returns true if table is truncated  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| table | <code>string</code> | The table to truncate |
+
 <a name="Database+drop"></a>
 
-### database.drop()
-Drop a table, useful for testing
+### database.drop(table) ⇒ <code>boolean</code>
+Drop a table
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>boolean</code> - Returns true if table is dropped  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| table | <code>string</code> | The table to drop |
+
 <a name="Database+setEnvVar"></a>
 
-### database.setEnvVar()
+### database.setEnvVar(name, value) ⇒ <code>boolean</code>
 Set an environment variable
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>boolean</code> - Returns true if table is truncated  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| name | <code>string</code> | Name of the environment variable |
+| value | <code>string</code> | Value of the environment variable |
+
 <a name="Database+getEnvVar"></a>
 
-### database.getEnvVar()
+### database.getEnvVar(name) ⇒ <code>array</code>
 Get an environment variable
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>array</code> - Returns true if table is truncated  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| name | <code>string</code> | Name of the environment variable to get |
+
 <a name="Database+getTableColumns"></a>
 
-### database.getTableColumns()
+### database.getTableColumns(name, [ignoreColumns]) ⇒ <code>array</code>
 Get table columns
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>array</code> - Returns names of the table as array  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| name | <code>string</code> |  | Name of the table |
+| [ignoreColumns] | <code>string</code> | <code>null</code> | Columns to ignore |
+
 <a name="Database+getTableColumnDefaultValues"></a>
 
-### database.getTableColumnDefaultValues()
+### database.getTableColumnDefaultValues(name, [ignoreColumns]) ⇒ <code>Object</code>
 Get column default values
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>Object</code> - Returns an object with column names and their default values  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| name | <code>string</code> |  | Name of the table |
+| [ignoreColumns] | <code>string</code> | <code>null</code> | Columns to ignore |
+
 <a name="Database+getTableColumnDataTypes"></a>
 
-### database.getTableColumnDataTypes()
+### database.getTableColumnDataTypes(name, [ignoreColumns]) ⇒ <code>Object</code>
 Get column data types
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>Object</code> - Returns an object with column names and their data types  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| name | <code>string</code> |  | Name of the table |
+| [ignoreColumns] | <code>string</code> | <code>null</code> | Columns to ignore |
+
 <a name="Database+export"></a>
 
-### database.export()
+### database.export(results) ⇒ <code>array</code>
 Export results
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>array</code> - Returns cleaned up results  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| results | <code>array</code> | Results to export |
+
 <a name="Database+saveCache"></a>
 
-### database.saveCache()
-Save cache
+### database.saveCache(cacheId, value) ⇒ <code>void</code>
+Save value to cache
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| cacheId | <code>string</code> | The cache ID |
+| value | <code>string</code> | The value to cache |
+
 <a name="Database+clearCache"></a>
 
-### database.clearCache()
-Clear cache
+### database.clearCache(cacheId) ⇒ <code>void</code>
+Clear a cache
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| cacheId | <code>string</code> | The ID of the cache to clear |
+
 <a name="Database+clearAllCache"></a>
 
-### database.clearAllCache()
+### database.clearAllCache() ⇒ <code>void</code>
 Clear all cache
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
 <a name="Database+clearConnection"></a>
 
-### database.clearConnection()
+### database.clearConnection() ⇒ <code>void</code>
 Clear connection
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
 <a name="Database+getDb"></a>
 
-### database.getDb()
+### database.getDb(args) ⇒ <code>array</code>
 Call method(s) on multiple DbObjects at the same time
 
-**Kind**: instance method of [<code>Database</code>](#Database) 
+**Kind**: instance method of [<code>Database</code>](#Database)  
+**Returns**: <code>array</code> - Returns an array of results  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| args | <code>array</code> \| <code>Object</code> | The arguments |
+
+**Example**  
+```js
+// Example for `args`
+   let args = [
+   {
+     entity: 'Test',
+     method: 'get',
+     args: [
+      // querying row # 1
+      1
+     ]
+   },
+   {
+     entity: 'Test',
+     method: 'get',
+     args: [
+      // querying row # 2
+      2
+     ]
+   }
+ ];
+// or
+ let args = {
+     entity: 'Test',
+     method: 'get',
+     args: [
+      // querying row # 1
+      1
+     ]
+   };
+```
