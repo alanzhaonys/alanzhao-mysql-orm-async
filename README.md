@@ -81,12 +81,10 @@ To further clean and speed up the database query procedures, I added two databas
       console.log('User #10 has been updated');
     }
 
-    try {
-      main();
-    } catch (error) {
-      // All errors will get caught here
-      console.log('Main error: ' + error.message);
-    }
+    main().catch(error => {
+        // All errors will get caught here
+        console.log('Main error: ' + error.message);
+    });
 
 ## Example: DbUser.js
 
