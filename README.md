@@ -60,7 +60,7 @@ To further clean and speed up the database query procedures, I added two databas
       }
 
       // Output total users in Database
-      const totalUsers = await database.getAllCount('users'));
+      const totalUsers = await database.getAllCount('users');
       console.log('Total users: ' + totalUsers);
 
       // Delete user ID of 10

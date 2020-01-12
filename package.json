@@ -12,6 +12,7 @@
     "mysql2": "^2.1.0"
   },
   "devDependencies": {
-    "jest": "^24.9.0"
+    "jest": "^24.9.0",
+    "coveralls": "^3.0.9"
   }
 }
