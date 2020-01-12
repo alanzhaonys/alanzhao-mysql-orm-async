@@ -1036,7 +1036,7 @@ module.exports = class Database {
   }
 
   /**
-   * Get number of deleted rows
+   * Get number of affected rows
    * @returns {number}
    */
   get affectedRows() {
