@@ -2,9 +2,9 @@
 
 ## Summary
 Running sequential SQL statements in NODEJS is not as straightforward and easy to read as using the procedural programing language 
-such as PHP. Using nested callbacks or Promises clutter up your code. This is where Async/Await comes to the rescue.
+such as PHP. Using nested callbacks or Promises clutters up your code. This is where Async/Await comes to the rescue.
 
-To further clean and speed up the database query procedures, I added two database abstraction layers that wraps all the NPM `mysql2` functionality.
+To further clean and speed up the database query procedures, I added two database abstraction layers that wrap all the NPM `mysql2` functionality.
 `Database.js` provides the common methods for all database needs. `DbObject.js` further abstracts the methods to provide one-to-one mapping of a database table to an object.
 
 ## main.js
