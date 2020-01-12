@@ -15,10 +15,11 @@ To further clean and speed up the database query procedures, I added two databas
 
       // Main database class
       const Database = require('./Database');
+      
       // DbUser extends from DbObject
       const DbUser = require('./DbUser');
 
-     // Get enviornment variables from
+      // Assign enviornment variables
       const dbEndpoint = process.env.DB_ENDPOINT;
       const dbUser = process.env.DB_USER;
       const dbPassword = process.env.DB_PASSWORD;
@@ -43,6 +44,7 @@ To further clean and speed up the database query procedures, I added two databas
 
       // Instantiate database
       const database = new Database(dbConfigs);
+      
       // Connect to database
       await database.connect();
 
