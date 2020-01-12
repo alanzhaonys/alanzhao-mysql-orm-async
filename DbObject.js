@@ -1,9 +1,6 @@
 /**
- * @author Alan Zhao <azhao6060@gmail.com>
- */
-
-/**
  * This is the base class of a data table, to provide further abstraction
+ * @author Alan Zhao <azhao6060@gmail.com>
  */
 module.exports = class DbObject {
   constructor(db) {

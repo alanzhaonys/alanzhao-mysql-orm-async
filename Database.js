@@ -1,13 +1,10 @@
-/**
- * @author Alan Zhao <azhao6060@gmail.com>
- */
-
-//const mysql = require('mysql2/promise');
+const mysql = require('mysql2/promise');
 
 /**
  * A database wrapper for npm 'mysql2' package
+ * @author Alan Zhao <azhao6060@gmail.com>
  */
-class Database {
+module.exports = class Database {
   /**
    * Construct database connection
    * @constructor
@@ -33,8 +30,8 @@ class Database {
 
   /**
    * Connect to database
-   * @param {boolean} Using SSL?
-   * @param {array} The SSL certificate paths
+   * @param {boolean} ssl Using SSL connection?
+   * @param {array} sslCerts The SSL certificate paths
    * @returns {boolean} Returns true on successful connection
    * @throws Database connection error
    */
@@ -84,7 +81,7 @@ class Database {
 
   /**
    * Escape string value
-   * @param {string} Value to escape
+   * @param {string} value Value to escape
    * @returns {string} Escaped value
    */
   escape(value) {
@@ -93,7 +90,7 @@ class Database {
 
   /**
    * Escape identifier(database/table/column name)
-   * @param {string} Value to escape
+   * @param {string} value Value to escape
    * @returns {string} Escaped value
    */
   escapeId(key) {
@@ -103,12 +100,12 @@ class Database {
   /**
    * Prepare a query with multiple insertion points,
    * utilizing the proper escaping for ids and values
-   * @example:
-   *    var query = "SELECT * FROM ?? WHERE ?? = ?";
-   *    var values = ['users', 'id', userId];
-   *    db.format(query, values);
-   * @param {string} Query to format
-   * @param {array} The array of values
+   * @example
+   * var query = "SELECT * FROM ?? WHERE ?? = ?";
+   * var values = ['users', 'id', userId];
+   * db.format(query, values);
+   * @param {string} query Query to format
+   * @param {array} values The array of values
    * @returns {string} The formatted query
    */
   format(query, values) {
@@ -120,11 +117,11 @@ class Database {
    * Differences between execute() and query():
    * @see https://github.com/sidorares/node-mysql2/issues/382
    * @example
-   *    var query = "SELECT * FROM ?? WHERE ?? = ?";
-   *    var values = ['users', 'id', userId];
-   *    await db.execute(query, values);
-   * @param {string} Query to execute
-   * @param {array} The values of the query
+   * var query = "SELECT * FROM ?? WHERE ?? = ?";
+   * var values = ['users', 'id', userId];
+   * await db.execute(query, values);
+   * @param {string} query Query to execute
+   * @param {array} values The values of the query
    * @returns {array} Results of query
    */
   async execute(query, values) {
@@ -137,14 +134,14 @@ class Database {
   /**
    * Run a query
    * @example
-   *    var query = "SELECT * FROM ?? WHERE ?? = ?";
-   *    var values = ['users', 'id', userId];
-   *    await db.query(query, values);
-   * or
-   *    var query = "SELECT * FROM users WHERE id = 10";
-   *    await db.query(query);
-   * @param {string} Query to execute
-   * @param {array} The values of the query, optional
+   * var query = "SELECT * FROM ?? WHERE ?? = ?";
+   * var values = ['users', 'id', userId];
+   * await db.query(query, values);
+   * // or
+   * var query = "SELECT * FROM users WHERE id = 10";
+   * await db.query(query);
+   * @param {string} query Query to execute
+   * @param {array} values The values of the query, optional
    * @returns {array} Results of query
    */
   async query(query, values = []) {
@@ -156,8 +153,8 @@ class Database {
 
   /**
    * Get one record by ID
-   * @param {string} The table name
-   * @param {number} The primary ID
+   * @param {string} table The table name
+   * @param {number} id The primary ID
    * @returns {Object} The row as an object
    */
   async get(table, id) {
@@ -169,8 +166,8 @@ class Database {
 
   /**
    * Get all records from a table
-   * @param {string} The table name
-   * @param {string} The order by syntax, example "id DESC"
+   * @param {string} table The table name
+   * @param {string} orderBy The order by syntax, example "id DESC"
    * @returns {array} The result array
    */
   async getAll(table, orderBy = null) {
@@ -179,7 +176,7 @@ class Database {
 
   /**
    * Get all record count of a table
-   * @param {string} The table name
+   * @param {string} table The table name
    * @returns {integer} The total count of the table
    */
   async getAllCount(table) {
@@ -189,14 +186,14 @@ class Database {
 
   /**
    * Construct a SELECT query and execute it
-   * @param {string} The table name
-   * @param {array} The criteria as an array, example:
+   * @param {string} table The table name
+   * @param {array} criteria The criteria as an array, example:
    *   {
    *     id: 10,
    *     status: 'expired'
    *   }
-   * @param {number} The number of results to return, optional
-   * @param {string} The order by syntax, example "id DESC", optional
+   * @param {number} limit The number of results to return, optional
+   * @param {string} orderBy The order by syntax, example "id DESC", optional
    * @returns {array} The result array
    */
   async getBy(table, criteria, limit = null, orderBy = null) {
@@ -231,22 +228,23 @@ class Database {
 
   /**
    * Construct single or multiple INSERT queries and execute
-   * @param {string} The table name
-   * @param {array|Object} The data to insert as a single object or array of objects
-   * Example:
-   *   {
-   *     id: 10,
-   *     firstName: 'John',
-   *     lastName: 'Doe',
-   *     status: 'active'
-   *   }
-   *   or
-   *   [{
-   *     id: 10,
-   *     firstName: 'John',
-   *     lastName: 'Doe',
-   *     status: 'active'
-   *   }, ... ]
+   * @param {string} table The table name
+   * @param {array|Object} data The data to insert as a single object or array of objects
+   * @example:
+   * // Example for data parameter:
+   * {
+   *   id: 10,
+   *   firstName: 'John',
+   *   lastName: 'Doe',
+   *   status: 'active'
+   * }
+   * // or
+   * [{
+   *   id: 10,
+   *   firstName: 'John',
+   *   lastName: 'Doe',
+   *   status: 'active'
+   * }, ... ]
    * @returns {boolean} Returns true on successful insertion
    */
   async insert(table, data) {
