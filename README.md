@@ -7,6 +7,11 @@ such as PHP. Using nested callbacks or Promises clutters up your code. This is w
 To further clean and speed up the database query procedures, I added two database abstraction layers that wrap all the NPM `mysql2` functionality.
 `Database.js` provides the common methods for all database needs. `DbObject.js` further abstracts the methods to provide one-to-one mapping of a database table to an object.
 
+## Installation
+`yarn add alanzhao-mysql-orm-async`
+or
+`npm install alanzhao-mysql-orm-async`
+
 ## Example: main.js
 
     main = async () => {
@@ -14,7 +19,7 @@ To further clean and speed up the database query procedures, I added two databas
       require('dotenv').config();
 
       // Main database class
-      const Database = require('./Database');
+      const Database = require('alanzhao-mysql-orm-async/Database');
       
       // DbUser extends from DbObject
       const DbUser = require('./DbUser');
@@ -88,7 +93,7 @@ To further clean and speed up the database query procedures, I added two databas
 
 ## Example: DbUser.js
 
-    const DbObject = require('./DbObject');
+    const DbObject = require('alanzhao-mysql-orm-async/DbObject');
 
     module.exports = class DbUser extends DbObject {
       constructor(db) {
