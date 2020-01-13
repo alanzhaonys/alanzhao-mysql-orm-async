@@ -697,7 +697,7 @@ module.exports = class Database {
   /**
    * Get an environment variable
    * @param {string} name Name of the environment variable to get
-   * @returns {array} Returns true if table is truncated
+   * @returns {string} The environment variable
    */
   async getEnvVar(name) {
     const query = 'SELECT @' + name;

@@ -707,7 +707,7 @@ Set an environment variable
 Get an environment variable
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
-**Returns**: <code>array</code> - Returns true if table is truncated  
+**Returns**: <code>string</code> - The environment variable
 
 | Param | Type | Description |
 | --- | --- | --- |
