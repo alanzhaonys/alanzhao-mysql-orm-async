@@ -585,7 +585,7 @@ Return first row of the result set
 
 <a name="Database+scalar"></a>
 
-### database.scalar(query) ⇒ <code>string</code> \| <code>number</code> \| <code>boolean</code> \| <code>decimal</code>
+### database.scalar(query) ⇒ <code>string</code> \| <code>number</code> \| <code>boolean</code>
 Return scalar value
 
 **Kind**: instance method of [<code>Database</code>](#Database)  
