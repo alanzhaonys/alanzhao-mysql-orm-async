@@ -38,7 +38,7 @@ databaseTest = async () => {
     try {
       expect(await database.connect()).toBe(true);
     } catch (error) {
-      throw new Exception(error.message);
+      throw new Error(error.message);
     }
   });
 
