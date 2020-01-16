@@ -608,7 +608,7 @@ module.exports = class Database {
   async decimal(query, decimal = 2) {
     const value = await this.scalar(query);
     return (value !== null && value !== '') ?
-      parseFloat(value.toFixed(decimal)) : null;
+      parseFloat(value).toFixed(decimal) : null;
   }
 
   /**
