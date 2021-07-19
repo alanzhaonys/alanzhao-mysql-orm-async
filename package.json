@@ -1,6 +1,6 @@
 {
   "name": "alanzhao-mysql-orm-async",
-  "version": "2.1.1",
+  "version": "2.2.1",
   "description": "",
   "scripts": {
     "test": "jest --coverage --silent"
@@ -8,11 +8,11 @@
   "author": "Alan Zhao",
   "license": "MIT",
   "dependencies": {
-    "dotenv": "^8.2.0",
-    "mysql2": "^2.1.0"
+    "dotenv": "^10.0.0",
+    "mysql2": "^2.2.5"
   },
   "devDependencies": {
-    "coveralls": "^3.0.9",
-    "jest": "^25.5.4"
+    "coveralls": "^3.1.1",
+    "jest": "^27.0.6"
   }
 }
