@@ -8,11 +8,11 @@
   "author": "Alan Zhao",
   "license": "MIT",
   "dependencies": {
+    "cardinal": "^2.1.1",
     "dotenv": "^10.0.0",
     "mysql2": "^2.2.5"
   },
   "devDependencies": {
-    "cardinal": "^2.1.1",
     "coveralls": "^3.1.1",
     "jest": "^27.0.6"
   }
