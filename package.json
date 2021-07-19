@@ -1,6 +1,6 @@
 {
   "name": "alanzhao-mysql-orm-async",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "description": "",
   "scripts": {
     "test": "jest --coverage --silent"
